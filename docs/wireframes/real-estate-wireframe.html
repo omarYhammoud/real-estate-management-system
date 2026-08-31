@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keystone RMS — Real Estate Management System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* ---- Ledger palette: pale account-book paper, pine-ink structure, brass/copper hardware ---- */
+    --bg:#EAEFE7;
+    --bg-line: rgba(45,74,58,.055);
+    --panel:#FCFCF8;
+    --panel-alt:#F5F7F1;
+    --line:#B9C4B4;
+    --line-soft:#D6DED0;
+    --margin-rule:#C0796A;
+    --ink:#1D2A22;
+    --ink-soft:#51604F;
+    --ink-faint:#8A9686;
+    --accent:#A85D2E;
+    --accent-deep:#8A4A22;
+    --sidebar-bg:#16241C;
+    --sidebar-bg-2:#1D3126;
+    --sidebar-ink:#DCE6D6;
+    --sidebar-ink-faint:#8AA083;
+    --status-ok:#2F6B4A;
+    --status-ok-bg:#E7F1E9;
+    --status-warn:#93650E;
+    --status-warn-bg:#F5EEDC;
+    --status-bad:#8B3327;
+    --status-bad-bg:#F5E7E3;
+    --status-neutral:#4B5A54;
+    --status-neutral-bg:#E9ECE7;
+    --sidebar-w:238px;
+    --radius:2px;
+    --font-display:"Fraunces", Georgia, serif;
+    --font-body:"Inter", "Segoe UI", Helvetica, Arial, sans-serif;
+    --font-mono:"IBM Plex Mono", "SF Mono", Consolas, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:var(--font-body);
+    background-color:var(--bg);
+    background-image:
+      repeating-linear-gradient(to bottom, var(--bg-line) 0, var(--bg-line) 1px, transparent 1px, transparent 30px);
+    color:var(--ink);
+    font-size:14px;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+  ::selection{background:var(--accent);color:#fff;}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  /* ---------- Layout shell ---------- */
+  .shell{display:flex;min-height:100vh;}
+
+  .sidebar{
+    width:var(--sidebar-w);
+    flex-shrink:0;
+    background-color:var(--sidebar-bg);
+    background-image:
+      linear-gradient(160deg, var(--sidebar-bg-2) 0%, var(--sidebar-bg) 55%),
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.035) 0, rgba(255,255,255,.035) 1px, transparent 1px, transparent 26px);
+    border-right:1px solid #0E1811;
+    box-shadow:2px 0 10px rgba(0,0,0,.15);
+    display:flex;
+    flex-direction:column;
+    position:fixed;
+    top:0;left:0;bottom:0;
+    transform:translateX(0);
+    transition:transform .2s ease;
+    z-index:40;
+  }
+  .sidebar-brand{
+    padding:22px 20px 16px 20px;
+    border-bottom:1px solid rgba(220,230,214,.14);
+  }
+  .sidebar-brand .mark{
+    width:34px;height:34px;border:1.5px solid var(--accent);border-radius:3px;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;
+    margin-bottom:10px;color:var(--accent);font-family:var(--font-mono);
+    background:rgba(168,93,46,.1);
+    transform:rotate(-1.5deg);
+  }
+  .sidebar-brand .name{font-family:var(--font-display);font-weight:600;font-size:17px;letter-spacing:.2px;color:#F3F6EF;}
+  .sidebar-brand .sub{font-size:10.5px;color:var(--sidebar-ink-faint);margin-top:3px;text-transform:uppercase;letter-spacing:1.1px;font-family:var(--font-mono);}
+
+  .nav-scroll{flex:1;overflow-y:auto;padding:14px 0 20px 0;}
+  .nav-group{margin-top:16px;}
+  .nav-group:first-child{margin-top:6px;}
+  .nav-group-label{
+    font-size:10px;text-transform:uppercase;letter-spacing:1.1px;
+    color:var(--sidebar-ink-faint);padding:0 20px;margin-bottom:7px;font-weight:600;
+    font-family:var(--font-mono);
+  }
+  .nav-item{
+    display:flex;align-items:center;gap:11px;
+    padding:8px 20px;
+    font-size:13.3px;color:var(--sidebar-ink);opacity:.72;
+    cursor:pointer;border-left:3px solid transparent;
+    transition:background .12s ease, opacity .12s ease;
+  }
+  .nav-item:hover{background:rgba(255,255,255,.04);opacity:1;}
+  .nav-item.active{
+    background:rgba(168,93,46,.14);opacity:1;font-weight:600;
+    border-left:3px solid var(--accent);color:#F7F5EE;
+  }
+  .nav-item .dot{
+    width:6px;height:6px;border:1.3px solid var(--sidebar-ink-faint);
+    flex-shrink:0;transform:rotate(45deg);
+  }
+  .nav-item.active .dot{background:var(--accent);border-color:var(--accent);}
+
+  .sidebar-foot{
+    border-top:1px solid rgba(220,230,214,.14);
+    padding:14px 20px;font-size:10.8px;color:var(--sidebar-ink-faint);
+    font-family:var(--font-mono);line-height:1.5;
+  }
+
+  /* ---------- Main ---------- */
+  .main{
+    margin-left:var(--sidebar-w);
+    flex:1;
+    min-width:0;
+    display:flex;flex-direction:column;
+  }
+  .topbar{
+    background:var(--panel);
+    border-bottom:1px solid var(--line-soft);
+    padding:14px 28px;
+    display:flex;align-items:center;justify-content:space-between;
+    gap:16px;position:sticky;top:0;z-index:30;
+  }
+  .topbar-left{display:flex;align-items:center;gap:12px;min-width:0;}
+  .burger{
+    display:none;
+    width:30px;height:30px;border:1px solid var(--line-soft);border-radius:4px;
+    align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;background:var(--panel);
+  }
+  .burger span{display:block;width:14px;height:1.4px;background:var(--ink);position:relative;}
+  .burger span::before,.burger span::after{content:"";position:absolute;left:0;width:14px;height:1.4px;background:var(--ink);}
+  .burger span::before{top:-4px;}
+  .burger span::after{top:4px;}
+  .crumb{font-size:11px;color:var(--ink-faint);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.4px;}
+  .crumb b{color:var(--accent);font-weight:600;}
+  .page-title{font-family:var(--font-display);font-size:21px;font-weight:600;margin-top:3px;color:var(--ink);}
+
+  .topbar-right{display:flex;align-items:center;gap:12px;flex-shrink:0;}
+  .search-box{
+    display:flex;align-items:center;gap:7px;
+    border:1px solid var(--line-soft);border-radius:4px;background:var(--panel-alt);
+    padding:7px 11px;color:var(--ink-faint);font-size:12.3px;
+    width:210px;
+  }
+  .avatar{
+    width:32px;height:32px;border-radius:50%;border:1.5px solid var(--accent);
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;
+    flex-shrink:0;color:var(--accent-deep);background:rgba(168,93,46,.1);font-family:var(--font-mono);
+  }
+
+  .content{padding:26px 28px 60px 28px;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ---------- Generic building blocks ---------- */
+  .section-head{
+    display:flex;align-items:flex-end;justify-content:space-between;
+    margin-bottom:18px;flex-wrap:wrap;gap:10px;
+  }
+  .section-head h2{font-family:var(--font-display);font-size:19px;margin:0 0 4px 0;font-weight:600;color:var(--ink);}
+  .section-head p{margin:0;font-size:12.5px;color:var(--ink-faint);}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+  .btn{
+    border:1px solid var(--ink);background:var(--panel);color:var(--ink);
+    padding:8px 15px;font-size:12.3px;border-radius:2px;cursor:pointer;font-weight:600;
+    white-space:nowrap;font-family:var(--font-body);transition:all .12s ease;
+  }
+  .btn:hover{background:var(--ink);color:#fff;}
+  .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent-deep);}
+  .btn.primary:hover{background:var(--accent-deep);border-color:var(--accent-deep);}
+  .btn.ghost{border-style:dashed;border-color:var(--line);font-weight:500;color:var(--ink-soft);background:transparent;}
+  .btn.ghost:hover{background:var(--panel-alt);color:var(--ink);}
+  .btn.small{padding:5px 11px;font-size:11.3px;}
+
+  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+  .kpi-card{
+    background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius);
+    padding:16px 18px;border-top:2px solid var(--accent);
+  }
+  .kpi-card .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--ink-faint);margin-bottom:10px;font-family:var(--font-mono);}
+  .kpi-card .val{font-family:var(--font-mono);font-size:24px;font-weight:600;color:var(--ink);letter-spacing:-.3px;}
+  .kpi-card .delta{font-size:11.3px;margin-top:7px;color:var(--ink-faint);}
+  .kpi-card .delta.up{color:var(--status-ok);}
+  .kpi-card .delta.down{color:var(--status-bad);}
+
+  .grid-2{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:20px;}
+  .panel{
+    background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius);
+    padding:18px 20px 18px 26px;position:relative;
+    box-shadow:0 1px 2px rgba(29,42,34,.04);
+  }
+  .panel::before{
+    content:"";position:absolute;left:14px;top:0;bottom:0;width:1px;background:var(--margin-rule);opacity:.35;
+  }
+  .panel h3{font-family:var(--font-display);font-size:15px;margin:0 0 13px 0;font-weight:600;color:var(--ink);}
+  .panel h3 .muted{color:var(--ink-faint);font-weight:400;font-size:11.5px;font-family:var(--font-body);}
+
+  .chart-box{
+    height:180px;border:1px solid var(--line-soft);border-radius:2px;
+    display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;
+    color:var(--ink-faint);font-size:11.5px;font-family:var(--font-mono);background:
+      var(--panel-alt)
+      repeating-linear-gradient(to right, rgba(45,74,58,.07) 0, rgba(45,74,58,.07) 1px, transparent 1px, transparent 34px),
+      repeating-linear-gradient(to bottom, rgba(45,74,58,.07) 0, rgba(45,74,58,.07) 1px, transparent 1px, transparent 24px);
+  }
+  .chart-box .icon{font-size:20px;}
+
+  .bars{display:flex;align-items:flex-end;gap:9px;height:100%;width:100%;padding:14px;}
+  .bars .bar{flex:1;background:rgba(168,93,46,.16);border:1px solid var(--accent);border-top:2px solid var(--accent);}
+
+  table{width:100%;border-collapse:collapse;font-size:12.6px;}
+  thead th{
+    text-align:left;font-size:10.3px;text-transform:uppercase;letter-spacing:.5px;
+    color:var(--ink-faint);border-bottom:1px solid var(--line-soft);padding:9px 12px;font-weight:600;
+    white-space:nowrap;font-family:var(--font-mono);background:var(--panel-alt);
+  }
+  tbody td{padding:11px 12px;border-bottom:1px solid var(--line-soft);vertical-align:middle;font-variant-numeric:tabular-nums;}
+  tbody td[data-label="Amount"],tbody td[data-label="Rent"],tbody td[data-label="Balance"],
+  tbody td[data-label="Paid"],tbody td[data-label="Charge"],tbody td[data-label="Payment"],
+  tbody td[data-label="Deposit"],tbody td[data-label="Cost"]{font-family:var(--font-mono);}
+  tbody tr:hover{background:var(--panel-alt);}
+  .table-wrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius);}
+  .row-link{cursor:pointer;color:var(--accent-deep);font-weight:600;text-decoration:underline;text-decoration-color:rgba(168,93,46,.35);text-underline-offset:2px;}
+  .cell-sub{color:var(--ink-faint);font-size:11.1px;margin-top:2px;}
+
+  /* Signature element: status shown as a rotated ink stamp, like a rent receipt */
+  .badge{
+    display:inline-block;padding:2.5px 10px;border-radius:2px;font-size:10.3px;font-weight:600;
+    text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;font-family:var(--font-mono);
+    background:transparent;border:1.4px solid currentColor;position:relative;
+    transform:rotate(-2deg);box-shadow:0 0 0 1px currentColor inset;
+  }
+  .badge.ok{color:var(--status-ok);}
+  .badge.warn{color:var(--status-warn);}
+  .badge.bad{color:var(--status-bad);}
+  .badge.neutral{color:var(--status-neutral);}
+
+  .filter-bar{
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;
+    background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius);
+    padding:12px 14px;
+  }
+  .filter-bar .field{display:flex;flex-direction:column;gap:5px;}
+  .filter-bar label{font-size:9.8px;text-transform:uppercase;color:var(--ink-faint);letter-spacing:.5px;font-family:var(--font-mono);}
+  .filter-bar input,.filter-bar select{
+    border:1px solid var(--line-soft);border-radius:2px;padding:7px 9px;font-size:12.3px;
+    background:var(--panel-alt);color:var(--ink);min-width:120px;font-family:var(--font-body);
+  }
+  .filter-bar .field.grow{flex:1;min-width:180px;}
+  .filter-bar .field.grow input{width:100%;}
+
+  .toolbar-note{font-size:11.1px;color:var(--ink-faint);padding:10px 12px;border-top:1px solid var(--line-soft);font-family:var(--font-mono);}
+
+  .pill-tabs{display:flex;gap:2px;margin-bottom:18px;flex-wrap:wrap;border-bottom:1px solid var(--line-soft);}
+  .pill-tabs .tab{
+    padding:9px 16px;font-size:12.3px;font-weight:600;color:var(--ink-faint);cursor:pointer;
+    border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .12s ease;
+  }
+  .pill-tabs .tab:hover{color:var(--ink-soft);}
+  .pill-tabs .tab.active{color:var(--accent-deep);border-bottom:2px solid var(--accent);}
+
+  .form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px;}
+  .form-grid.cols-3{grid-template-columns:repeat(3,1fr);}
+  .form-field{display:flex;flex-direction:column;gap:6px;}
+  .form-field.span-2{grid-column:span 2;}
+  .form-field label{font-size:11px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.3px;}
+  .form-field .hint{font-size:10.6px;color:var(--ink-faint);font-weight:400;text-transform:none;letter-spacing:0;}
+  .form-field input,.form-field select,.form-field textarea{
+    border:1px solid var(--line-soft);border-radius:2px;padding:9px 11px;font-size:12.8px;
+    background:var(--panel-alt);color:var(--ink);width:100%;font-family:var(--font-mono);
+  }
+  .form-field input:focus,.form-field select:focus,.form-field textarea:focus{
+    border-color:var(--accent);background:#fff;
+  }
+  .form-field textarea{resize:vertical;min-height:60px;font-family:var(--font-body);}
+  .form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--line-soft);}
+
+  .stat-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dotted var(--line);font-size:12.6px;}
+  .stat-line:last-child{border-bottom:none;}
+  .stat-line .k{color:var(--ink-faint);}
+  .stat-line .v{font-weight:600;font-family:var(--font-mono);}
+  .stat-line .v.pos{color:var(--status-ok);}
+  .stat-line .v.neg{color:var(--status-bad);}
+
+  .breadcrumb-link{cursor:pointer;color:var(--ink-soft);text-decoration:underline;text-decoration-color:var(--line-soft);}
+  .breadcrumb-link:hover{color:var(--accent-deep);}
+
+  .empty-state{
+    text-align:center;padding:40px 20px;color:var(--ink-faint);border:1px dashed var(--line);
+    border-radius:var(--radius);background:var(--panel);
+  }
+  .empty-state .glyph{font-size:26px;margin-bottom:8px;}
+  .empty-state .t{font-weight:700;color:var(--ink);margin-bottom:4px;font-size:13px;font-family:var(--font-display);}
+
+  .progress{height:6px;border-radius:1px;background:var(--panel-alt);overflow:hidden;border:1px solid var(--line-soft);}
+  .progress .fill{height:100%;background:var(--accent);}
+
+  .flex-between{display:flex;align-items:center;justify-content:space-between;}
+  .muted{color:var(--ink-faint);}
+  .mt-16{margin-top:16px;}
+  .mb-16{margin-bottom:16px;}
+
+  .avatar-sm{
+    width:26px;height:26px;border-radius:50%;border:1.3px solid var(--accent);background:rgba(168,93,46,.08);
+    display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;
+    color:var(--accent-deep);flex-shrink:0;font-family:var(--font-mono);
+  }
+  .cell-flex{display:flex;align-items:center;gap:8px;}
+
+  .checkbox-row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft);}
+
+  .divider{height:1px;background:var(--line-soft);margin:18px 0;background-image:repeating-linear-gradient(to right, var(--line) 0, var(--line) 4px, transparent 4px, transparent 8px);height:1px;}
+
+  .scroll-x{overflow-x:auto;}
+
+  /* Overlay for mobile sidebar */
+  .overlay{display:none;position:fixed;inset:0;background:rgba(15,24,17,.45);z-index:35;}
+  .overlay.show{display:block;}
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:1100px){
+    .kpi-row{grid-template-columns:repeat(2,1fr);}
+    .grid-2{grid-template-columns:1fr;}
+    .form-grid,.form-grid.cols-3{grid-template-columns:repeat(2,1fr);}
+  }
+  @media (max-width:760px){
+    .sidebar{transform:translateX(-100%);}
+    .sidebar.open{transform:translateX(0);}
+    .main{margin-left:0;}
+    .burger{display:flex;}
+    .search-box{display:none;}
+    .kpi-row{grid-template-columns:1fr 1fr;}
+    .form-grid,.form-grid.cols-3{grid-template-columns:1fr;}
+    .content{padding:16px;}
+    .topbar{padding:10px 14px;}
+    .page-title{font-size:16px;}
+    thead{display:none;}
+    table,tbody,tr,td{display:block;width:100%;}
+    tbody tr{border:1px solid var(--line-soft);border-left:2px solid var(--accent);border-radius:2px;margin-bottom:10px;padding:9px 12px;background:var(--panel);}
+    tbody td{border-bottom:none;padding:5px 0;display:flex;justify-content:space-between;gap:10px;text-align:right;}
+    tbody td::before{content:attr(data-label);font-size:10px;text-transform:uppercase;color:var(--ink-faint);font-weight:600;text-align:left;font-family:var(--font-mono);}
+    .table-wrap{border:none;background:none;}
+  }
+  @media (max-width:480px){
+    .kpi-row{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<div class="shell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="mark">RE</div>
+      <div class="name">Keystone RMS</div>
+      <div class="sub">Real Estate Management</div>
+    </div>
+    <nav class="nav-scroll">
+      <div class="nav-group">
+        <div class="nav-item active" data-view="dashboard" onclick="go('dashboard')"><span class="dot"></span>Dashboard</div>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-label">Portfolio</div>
+        <div class="nav-item" data-view="properties" onclick="go('properties')"><span class="dot"></span>Properties</div>
+        <div class="nav-item" data-view="property-detail" onclick="go('property-detail')"><span class="dot"></span>Units</div>
+        <div class="nav-item" data-view="owners" onclick="go('owners')"><span class="dot"></span>Owners</div>
+        <div class="nav-item" data-view="tenants" onclick="go('tenants')"><span class="dot"></span>Tenants</div>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-label">Leasing</div>
+        <div class="nav-item" data-view="contracts" onclick="go('contracts')"><span class="dot"></span>Rental Contracts</div>
+        <div class="nav-item" data-view="contract-detail" onclick="go('contract-detail')"><span class="dot"></span>Contract &amp; Rent Schedule</div>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-label">Billing &amp; Payments</div>
+        <div class="nav-item" data-view="invoices" onclick="go('invoices')"><span class="dot"></span>Rent Invoices</div>
+        <div class="nav-item" data-view="payments" onclick="go('payments')"><span class="dot"></span>Record Payment</div>
+        <div class="nav-item" data-view="deposits" onclick="go('deposits')"><span class="dot"></span>Security Deposits</div>
+        <div class="nav-item" data-view="statement" onclick="go('statement')"><span class="dot"></span>Tenant Statement</div>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-label">Operations</div>
+        <div class="nav-item" data-view="maintenance" onclick="go('maintenance')"><span class="dot"></span>Maintenance</div>
+        <div class="nav-item" data-view="expenses" onclick="go('expenses')"><span class="dot"></span>Expenses</div>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-label">Insights</div>
+        <div class="nav-item" data-view="reports" onclick="go('reports')"><span class="dot"></span>Rental Income Reports</div>
+      </div>
+    </nav>
+    <div class="sidebar-foot">Low-fidelity wireframe · v0.1<br>Grayscale — layout &amp; flow only</div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <div class="main">
+
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="burger" onclick="openSidebar()"><span></span></div>
+        <div>
+          <div class="crumb" id="crumb">Overview / <b>Dashboard</b></div>
+          <div class="page-title" id="pageTitle">Dashboard</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="search-box">🔍&nbsp; Search properties, tenants…</div>
+        <div class="avatar">AM</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ======================================================= -->
+      <!-- 1. DASHBOARD -->
+      <!-- ======================================================= -->
+      <section class="view active" id="view-dashboard">
+        <div class="section-head">
+          <div>
+            <h2>Portfolio Overview</h2>
+            <p>Snapshot of occupancy, collections and outstanding balances</p>
+          </div>
+          <div class="actions">
+            <select style="border:1px solid var(--line-soft);border-radius:4px;padding:8px 10px;font-size:12.5px;">
+              <option>This Month</option>
+              <option>Last Month</option>
+              <option>This Quarter</option>
+              <option>This Year</option>
+            </select>
+            <button class="btn primary" onclick="go('invoices')">+ Generate Invoices</button>
+          </div>
+        </div>
+
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <div class="lbl">Total Properties</div>
+            <div class="val">38</div>
+            <div class="delta">142 units · 6 owners</div>
+          </div>
+          <div class="kpi-card">
+            <div class="lbl">Occupancy Rate</div>
+            <div class="val">91%</div>
+            <div class="delta up">▲ 3 units leased this month</div>
+          </div>
+          <div class="kpi-card">
+            <div class="lbl">Rent Due This Month</div>
+            <div class="val">$186,400</div>
+            <div class="delta">129 active contracts</div>
+          </div>
+          <div class="kpi-card">
+            <div class="lbl">Collected / Outstanding</div>
+            <div class="val">$151,220</div>
+            <div class="delta down">$35,180 outstanding · 14 overdue</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <h3>Rental Income — Last 6 Months <span class="muted">(billed vs collected)</span></h3>
+            <div class="chart-box">
+              <div class="bars">
+                <div class="bar" style="height:58%"></div>
+                <div class="bar" style="height:71%"></div>
+                <div class="bar" style="height:64%"></div>
+                <div class="bar" style="height:80%"></div>
+                <div class="bar" style="height:74%"></div>
+                <div class="bar" style="height:88%"></div>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Collection Status <span class="muted">(current period)</span></h3>
+            <div class="stat-line"><span class="k">Paid in full</span><span class="v pos">86 invoices</span></div>
+            <div class="stat-line"><span class="k">Partially paid</span><span class="v">18 invoices</span></div>
+            <div class="stat-line"><span class="k">Unpaid / overdue</span><span class="v neg">14 invoices</span></div>
+            <div class="stat-line"><span class="k">Collection rate</span><span class="v">81%</span></div>
+            <div class="divider"></div>
+            <div class="progress"><div class="fill" style="width:81%"></div></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <div class="flex-between mb-16">
+              <h3 style="margin:0;">Rent Due — Next 7 Days</h3>
+              <span class="row-link" onclick="go('invoices')">View all</span>
+            </div>
+            <div class="table-wrap" style="border:none;">
+              <table>
+                <thead><tr><th>Tenant</th><th>Unit</th><th>Due</th><th>Amount</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr><td data-label="Tenant">R. Haddad</td><td data-label="Unit">Cedar Court — 4B</td><td data-label="Due">Sep 01</td><td data-label="Amount">$1,450</td><td data-label="Status"><span class="badge warn">Due Soon</span></td></tr>
+                  <tr><td data-label="Tenant">S. Nasr</td><td data-label="Unit">Palm Residence — 2A</td><td data-label="Due">Sep 01</td><td data-label="Amount">$2,100</td><td data-label="Status"><span class="badge warn">Due Soon</span></td></tr>
+                  <tr><td data-label="Tenant">M. Aoun</td><td data-label="Unit">Cedar Court — 1C</td><td data-label="Due">Sep 03</td><td data-label="Amount">$980</td><td data-label="Status"><span class="badge neutral">Scheduled</span></td></tr>
+                  <tr><td data-label="Tenant">K. Fares</td><td data-label="Unit">Marina View — 7F</td><td data-label="Due">Sep 05</td><td data-label="Amount">$1,750</td><td data-label="Status"><span class="badge neutral">Scheduled</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="flex-between mb-16">
+              <h3 style="margin:0;">Contracts Expiring Soon</h3>
+              <span class="row-link" onclick="go('contracts')">View all</span>
+            </div>
+            <div class="table-wrap" style="border:none;">
+              <table>
+                <thead><tr><th>Tenant</th><th>Unit</th><th>Ends</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr><td data-label="Tenant">J. Khalil</td><td data-label="Unit">Palm Residence — 5D</td><td data-label="Ends">Sep 14</td><td data-label="Status"><span class="badge bad">Expiring</span></td></tr>
+                  <tr><td data-label="Tenant">D. Saab</td><td data-label="Unit">Marina View — 2B</td><td data-label="Ends">Sep 21</td><td data-label="Status"><span class="badge warn">Renewal Pending</span></td></tr>
+                  <tr><td data-label="Tenant">L. Zeidan</td><td data-label="Unit">Cedar Court — 6A</td><td data-label="Ends">Oct 02</td><td data-label="Status"><span class="badge neutral">Notified</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- 2. PROPERTIES -->
+      <!-- ======================================================= -->
+      <section class="view" id="view-properties">
+        <div class="section-head">
+          <div>
+            <h2>Properties</h2>
+            <p>All buildings and standalone units under management</p>
+          </div>
+          <div class="actions">
+            <button class="btn ghost">Export</button>
+            <button class="btn primary">+ Add Property</button>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <div class="field grow"><label>Search</label><input placeholder="Property name or address"></div>
+          <div class="field"><label>Owner</label><select><option>All Owners</option><option>N. Karam</option><option>Trust Holdings</option></select></div>
+          <div class="field"><label>Type</label><select><option>All Types</option><option>Residential</option><option>Commercial</option><option>Mixed-Use</option></select></div>
+          <div class="field"><label>Status</label><select><option>All</option><option>Fully Occupied</option><option>Has Vacancy</option></select></div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Property</th><th>Type</th><th>Units</th><th>Owner</th><th>Occupancy</th><th>Monthly Rent Roll</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr onclick="go('property-detail')">
+                <td data-label="Property"><span class="row-link">Cedar Court</span><div class="cell-sub">Achrafieh, Beirut</div></td>
+                <td data-label="Type">Residential</td>
+                <td data-label="Units">12</td>
+                <td data-label="Owner">N. Karam</td>
+                <td data-label="Occupancy">11 / 12</td>
+                <td data-label="Rent Roll">$16,200</td>
+                <td data-label="Status"><span class="badge ok">Active</span></td>
+                <td>›</td>
+              </tr>
+              <tr onclick="go('property-detail')">
+                <td data-label="Property"><span class="row-link">Palm Residence</span><div class="cell-sub">Jal el Dib</div></td>
+                <td data-label="Type">Residential</td>
+                <td data-label="Units">20</td>
+                <td data-label="Owner">Trust Holdings</td>
+                <td data-label="Occupancy">17 / 20</td>
+                <td data-label="Rent Roll">$28,900</td>
+                <td data-label="Status"><span class="badge warn">Has Vacancy</span></td>
+                <td>›</td>
+              </tr>
+              <tr onclick="go('property-detail')">
+                <td data-label="Property"><span class="row-link">Marina View Tower</span><div class="cell-sub">Zaitunay Bay</div></td>
+                <td data-label="Type">Mixed-Use</td>
+                <td data-label="Units">34</td>
+                <td data-label="Owner">Trust Holdings</td>
+                <td data-label="Occupancy">33 / 34</td>
+                <td data-label="Rent Roll">$61,450</td>
+                <td data-label="Status"><span class="badge ok">Active</span></td>
+                <td>›</td>
+              </tr>
+              <tr onclick="go('property-detail')">
+                <td data-label="Property"><span class="row-link">Hillside Villas</span><div class="cell-sub">Broummana</div></td>
+                <td data-label="Type">Residential</td>
+                <td data-label="Units">6</td>
+                <td data-label="Owner">N. Karam</td>
+                <td data-label="Occupancy">6 / 6</td>
+                <td data-label="Rent Roll">$9,600</td>
+                <td data-label="Status"><span class="badge ok">Active</span></td>
+                <td>›</td>
+              </tr>
+              <tr onclick="go('property-detail')">
+                <td data-label="Property"><span class="row-link">Downtown Offices A</span><div class="cell-sub">Riad El Solh</div></td>
+                <td data-label="Type">Commercial</td>
+                <td data-label="Units">8</td>
+                <td data-label="Owner">S. Rahal</td>
+                <td data-label="Occupancy">5 / 8</td>
+                <td data-label="Rent Roll">$22,000</td>
+                <td data-label="Status"><span class="badge bad">Low Occupancy</span></td>
+                <td>›</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="toolbar-note">Showing 5 of 38 properties · click a row to open its unit list</div>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- 3. PROPERTY DETAIL / UNITS -->
+      <!-- ======================================================= -->
+      <section class="view" id="view-property-detail">
+        <div class="crumb mb-16"><span class="breadcrumb-link" onclick="go('properties')">Properties</span> / <b>Cedar Court</b></div>
+
+        <div class="grid-2" style="grid-template-columns:2fr 1fr;">
+          <div class="panel">
+            <h3>Cedar Court <span class="muted">— Achrafieh, Beirut</span></h3>
+            <div class="form-grid cols-3" style="gap:10px;">
+              <div class="stat-line"><span class="k">Type</span><span class="v">Residential</span></div>
+              <div class="stat-line"><span class="k">Units</span><span class="v">12</span></div>
+              <div class="stat-line"><span class="k">Owner</span><span class="v">N. Karam</span></div>
+              <div class="stat-line"><span class="k">Occupied</span><span class="v pos">11</span></div>
+              <div class="stat-line"><span class="k">Vacant</span><span class="v neg">1</span></div>
+              <div class="stat-line"><span class="k">Rent Roll</span><span class="v">$16,200 / mo</span></div>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Building Photo</h3>
+            <div class="chart-box" style="height:110px;"><div class="icon">🏢</div>image placeholder</div>
+          </div>
+        </div>
+
+        <div class="section-head">
+          <div><h2 style="font-size:15px;">Units</h2><p>Availability and current occupancy for this property</p></div>
+          <div class="actions"><button class="btn primary">+ Add Unit</button></div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Unit</th><th>Type</th><th>Size</th><th>Status</th><th>Current Tenant</th><th>Rent Amount</th><th>Contract Ends</th><th></th></tr></thead>
+            <tbody>
+              <tr><td data-label="Unit">1A</td><td data-label="Type">2BR / 2BA</td><td data-label="Size">110 m²</td><td data-label="Status"><span class="badge ok">Occupied</span></td><td data-label="Tenant"><span class="row-link" onclick="go('contract-detail')">M. Aoun</span></td><td data-label="Rent">$980</td><td data-label="Ends">Apr 2027</td><td>›</td></tr>
+              <tr><td data-label="Unit">1B</td><td data-label="Type">1BR / 1BA</td><td data-label="Size">72 m²</td><td data-label="Status"><span class="badge neutral">Vacant</span></td><td data-label="Tenant">—</td><td data-label="Rent">$720 (list)</td><td data-label="Ends">—</td><td>›</td></tr>
+              <tr><td data-label="Unit">2A</td><td data-label="Type">2BR / 1BA</td><td data-label="Size">98 m²</td><td data-label="Status"><span class="badge ok">Occupied</span></td><td data-label="Tenant"><span class="row-link">S. Nasr</span></td><td data-label="Rent">$1,050</td><td data-label="Ends">Jan 2027</td><td>›</td></tr>
+              <tr><td data-label="Unit">4B</td><td data-label="Type">3BR / 2BA</td><td data-label="Size">142 m²</td><td data-label="Status"><span class="badge ok">Occupied</span></td><td data-label="Tenant"><span class="row-link">R. Haddad</span></td><td data-label="Rent">$1,450</td><td data-label="Ends">Dec 2026</td><td>›</td></tr>
+              <tr><td data-label="Unit">6A</td><td data-label="Type">2BR / 2BA</td><td data-label="Size">112 m²</td><td data-label="Status"><span class="badge warn">Notice Given</span></td><td data-label="Tenant"><span class="row-link">L. Zeidan</span></td><td data-label="Rent">$1,100</td><td data-label="Ends">Oct 02 2026</td><td>›</td></tr>
+            </tbody>
+          </table>
+          <div class="toolbar-note">Showing 5 of 12 units</div>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- 4. OWNERS -->
+      <!-- ======================================================= -->
+      <section class="view" id="view-owners">
+        <div class="section-head">
+          <div><h2>Owners</h2><p>Property owners and their portfolio income</p></div>
+          <div class="actions"><button class="btn primary">+ Add Owner</button></div>
+        </div>
+
+        <div class="filter-bar">
+          <div class="field grow"><label>Search</label><input placeholder="Owner name"></div>
+          <div class="field"><label>Payout Method</label><select><option>All</option><option>Bank Transfer</option><option>Cheque</option></select></div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Owner</th><th>Contact</th><th>Properties</th><th>Units</th><th>Net Income (MTD)</th><th>Balance Due to Owner</th><th></th></tr></thead>
+            <tbody>
+              <tr><td data-label="Owner"><span class="row-link">N. Karam</span></td><td data-label="Contact">n.karam@mail.com</td><td data-label="Properties">2</td><td data-label="Units">18</td><td data-label="Net Income">$18,940</td><td data-label="Balance"><span class="badge ok">Settled</span></td><td>›</td></tr>
+              <tr><td data-label="Owner"><span class="row-link">Trust Holdings SAL</span></td><td data-label="Contact">accounts@trustholdings.co</td><td data-label="Properties">3</td><td data-label="Units">61</td><td data-label="Net Income">$71,300</td><td data-label="Balance"><span class="badge warn">$12,400 Due</span></td><td>›</td></tr>
+              <tr><td data-label="Owner"><span class="row-link">S. Rahal</span></td><td data-label="Contact">rahal.s@mail.com</td><td data-label="Properties">1</td><td data-label="Units">8</td><td data-label="Net Income">$9,150</td><td data-label="Balance"><span class="badge warn">$4,800 Due</span></td><td>›</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel mt-16">
+          <h3>Owner Detail — Trust Holdings SAL <span class="muted">(example expanded row)</span></h3>
+          <div class="form-grid cols-3">
+            <div class="stat-line"><span class="k">Properties</span><span class="v">Palm Residence, Marina View, Downtown Offices B</span></div>
+            <div class="stat-line"><span class="k">Payout method</span><span class="v">Bank Transfer</span></div>
+            <div class="stat-line"><span class="k">Management fee</span><span class="v">8% of collected rent</span></div>
+            <div class="stat-line"><span class="k">Gross rent collected</span><span class="v">$77,500</span></div>
+            <div class="stat-line"><span class="k">Management fee deducted</span><span class="v neg">-$6,200</span></div>
+            <div class="stat-line"><span class="k">Net payable to owner</span><span class="v pos">$71,300</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- 5. TENANTS -->
+      <!-- ======================================================= -->
+      <section class="view" id="view-tenants">
+        <div class="section-head">
+          <div><h2>Tenants</h2><p>Everyone currently or previously renting a unit</p></div>
+          <div class="actions"><button class="btn primary">+ Add Tenant</button></div>
+        </div>
+
+        <div class="filter-bar">
+          <div class="field grow"><label>Search</label><input placeholder="Tenant name, phone or email"></div>
+          <div class="field"><label>Contract Status</label><select><option>All</option><option>Active</option><option>Expiring</option><option>Ended</option></select></div>
+          <div class="field"><label>Balance</label><select><option>All</option><option>Outstanding</option><option>Current</option></select></div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Tenant</th><th>Contact</th><th>Unit</th><th>Contract</th><th>Monthly Rent</th><th>Balance</th><th></th></tr></thead>
+            <tbody>
+              <tr onclick="go('statement')">
+                <td data-label="Tenant"><div class="cell-flex"><span class="avatar-sm">RH</span><span class="row-link">R. Haddad</span></div></td>
+                <td data-label="Contact">+961 3 456 789</td>
+                <td data-label="Unit">Cedar Court — 4B</td>
+                <td data-label="Contract"><span class="badge ok">Active</span></td>
+                <td data-label="Rent">$1,450</td>
+                <td data-label="Balance"><span class="badge bad">$1,450 Overdue</span></td>
+                <td>›</td>
+              </tr>
+              <tr onclick="go('statement')">
+                <td data-label="Tenant"><div class="cell-flex"><span class="avatar-sm">SN</span><span class="row-link">S. Nasr</span></div></td>
+                <td data-label="Contact">+961 3 220 114</td>
+                <td data-label="Unit">Cedar Court — 2A</td>
+                <td data-label="Contract"><span class="badge ok">Active</span></td>
+                <td data-label="Rent">$1,050</td>
+                <td data-label="Balance"><span class="badge warn">$400 Partial</span></td>
+                <td>›</td>
+              </tr>
+              <tr onclick="go('statement')">
+                <td data-label="Tenant"><div class="cell-flex"><span class="avatar-sm">MA</span><span class="row-link">M. Aoun</span></div></td>
+                <td data-label="Contact">+961 71 900 221</td>
+                <td data-label="Unit">Cedar Court — 1A</td>
+                <td data-label="Contract"><span class="badge ok">Active</span></td>
+                <td data-label="Rent">$980</td>
+                <td data-label="Balance"><span class="badge ok">$0 Current</span></td>
+                <td>›</td>
+              </tr>
+              <tr onclick="go('statement')">
+                <td data-label="Tenant"><div class="cell-flex"><span class="avatar-sm">JK</span><span class="row-link">J. Khalil</span></div></td>
+                <td data-label="Contact">+961 3 771 552</td>
+                <td data-label="Unit">Palm Residence — 5D</td>
+                <td data-label="Contract"><span class="badge warn">Expiring</span></td>
+                <td data-label="Rent">$1,300</td>
+                <td data-label="Balance"><span class="badge ok">$0 Current</span></td>
+                <td>›</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- 6. RENTAL CONTRACTS (LIST) -->
+      <!-- ======================================================= -->
+      <section class="view" id="view-contracts">
+        <div class="section-head">
+          <div><h2>Rental Contracts</h2><p>Lease agreements — active, upcoming and ended</p></div>
+          <div class="actions"><button class="btn primary" onclick="go('contract-detail')">+ New Contract</button></div>
+        </div>
+
+        <div class="pill-tabs">
+          <div class="tab active">All (129)</div>
+          <div class="tab">Active (108)</div>
+          <div class="tab">Expiring in 30 days (7)</div>
+          <div class="tab">Ended (14)</div>
+        </div>
+
+        <div class="filter-bar">
+          <div class="field grow"><label>Search</label><input placeholder="Tenant, unit or contract ID"></div>
+          <div class="field"><label>Property</label><select><option>All Properties</option><option>Cedar Court</option><option>Palm Residence</option></select></div>
+          <div class="field"><label>Frequency</label><select><option>All</option><option>Monthly</option><option>Quarterly</option><option>Annual</option></select></div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Contract ID</th><th>Tenant</th><th>Unit</th><th>Start</th><th>End</th><th>Rent</th><th>Frequency</th><th>Deposit</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr onclick="go('contract-detail')"><td data-label="ID"><span class="row-link">LC-2024-118</span></td><td data-label="Tenant">R. Haddad</td><td data-label="Unit">Cedar Court 4B</td><td data-label="Start">Jan 01 2026</td><td data-label="End">Dec 31 2026</td><td data-label="Rent">$1,450 /mo</td><td data-label="Freq">Monthly</td><td data-label="Deposit">$2,900</td><td data-label="Status"><span class="badge ok">Active</span></td></tr>
+              <tr onclick="go('contract-detail')"><td data-label="ID"><span class="row-link">LC-2024-119</span></td><td data-label="Tenant">S. Nasr</td><td data-label="Unit">Cedar Court 2A</td><td data-label="Start">Feb 01 2026</td><td data-label="End">Jan 31 2027</td><td data-label="Rent">$1,050 /mo</td><td data-label="Freq">Monthly</td><td data-label="Deposit">$2,100</td><td data-label="Status"><span class="badge ok">Active</span></td></tr>
+              <tr onclick="go('contract-detail')"><td data-label="ID"><span class="row-link">LC-2023-076</span></td><td data-label="Tenant">J. Khalil</td><td data-label="Unit">Palm Residence 5D</td><td data-label="Start">Sep 15 2025</td><td data-label="End">Sep 14 2026</td><td data-label="Rent">$1,300 /mo</td><td data-label="Freq">Monthly</td><td data-label="Deposit">$1,300</td><td data-label="Status"><span class="badge bad">Expiring</span></td></tr>
+              <tr onclick="go('contract-detail')"><td data-label="ID"><span class="row-link">LC-2023-091</span></td><td data-label="Tenant">D. Saab</td><td data-label="Unit">Marina View 2B</td><td data-label="Start">Oct 01 2025</td><td data-label="End">Sep 30 2026</td><td data-label="Rent">$3,600 /qtr</td><td data-label="Freq">Quarterly</td><td data-label="Deposit">$3,600</td><td data-label="Status"><span class="badge warn">Renewal Pending</span></td></tr>
+              <tr onclick="go('contract-detail')"><td data-label="ID"><span class="row-link">LC-2022-034</span></td><td data-label="Tenant">P. Chami</td><td data-label="Unit">Downtown Offices A3</td><td data-label="Start">Jun 01 2025</td><td data-label="End">May 31 2026</td><td data-label="Rent">$18,000 /yr</td><td data-label="Freq">Annual</td><td data-label="Deposit">$18,000</td><td data-label="Status"><span class="badge neutral">Ended</span></td></tr>
+            </tbody>
+          </table>
+          <div class="toolbar-note">Showing 5 of 129 contracts</div>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- 7. CONTRACT DETAIL + NEW CONTRACT FORM + RENT SCHEDULE -->
+      <!-- ======================================================= -->
+      <section class="view" id="view-contract-detail">
+        <div class="crumb mb-16"><span class="breadcrumb-link" onclick="go('contracts')">Rental Contracts</span> / <b>LC-2024-118</b></div>
+
+        <div class="pill-tabs">
+          <div class="tab active">Contract Details</div>
+          <div class="tab">Rent Schedule</div>
+          <div class="tab">Deposit</div>
+          <div class="tab">Documents</div>
+        </div>
+
+        <div class="grid-2" style="grid-template-columns:1fr 1fr;">
+          <div class="panel">
+            <h3>Contract Terms <span class="muted">— new / edit form</span></h3>
+            <div class="form-grid">
+              <div class="form-field"><label>Property</label><select><option>Cedar Court</option></select></div>
+              <div class="form-field"><label>Unit</label><select><option>4B — 3BR/2BA</option></select></div>
+              <div class="form-field"><label>Tenant</label><select><option>R. Haddad</option><option>+ New Tenant…</option></select></div>
+              <div class="form-field"><label>Contract ID</label><input value="LC-2024-118" disabled></div>
+              <div class="form-field"><label>Start Date</label><input type="text" value="01 / 01 / 2026"></div>
+              <div class="form-field"><label>End Date</label><input type="text" value="31 / 12 / 2026"></div>
+              <div class="form-field"><label>Rent Amount</label><input type="text" value="$1,450.00"></div>
+              <div class="form-field"><label>Billing Frequency</label><select><option>Monthly</option><option>Quarterly</option><option>Annual</option></select></div>
+              <div class="form-field"><label>Security Deposit</label><input type="text" value="$2,900.00"></div>
+              <div class="form-field"><label>Rent Due Day</label><input type="text" value="1st of each period"></div>
+              <div class="form-field span-2"><label>Notes / Special Terms <span class="hint">optional</span></label><textarea>Includes 1 parking spot. Utilities billed separately.</textarea></div>
+            </div>
+            <div class="form-actions">
+              <button class="btn ghost">Terminate Contract</button>
+              <button class="btn primary">Save Contract</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3>Summary</h3>
+            <div class="stat-line"><span class="k">Tenant</span><span class="v">R. Haddad</span></div>
+            <div class="stat-line"><span class="k">Unit</span><span class="v">Cedar Court — 4B</span></div>
+            <div class="stat-line"><span class="k">Term</span><span class="v">Jan 01 – Dec 31, 2026</span></div>
+            <div class="stat-line"><span class="k">Rent</span><span class="v">$1,450 / month</span></div>
+            <div class="stat-line"><span class="k">Deposit held</span><span class="v">$2,900 <span class="badge ok" style="margin-left:6px;">Held</span></span></div>
+            <div class="stat-line"><span class="k">Invoices generated</span><span class="v">8 of 12</span></div>
+            <div class="stat-line"><span class="k">Total billed to date</span><span class="v">$11,600</span></div>
+            <div class="stat-line"><span class="k">Total collected</span><span class="v pos">$10,150</span></div>
+            <div class="stat-line"><span class="k">Outstanding balance</span><span class="v neg">$1,450</span></div>
+            <div class="divider"></div>
+            <button class="btn primary small" onclick="go('statement')" style="width:100%;">View Tenant Statement</button>
+          </div>
+        </div>
+
+        <div class="panel mt-16">
+          <h3>Rent Schedule <span class="muted">— auto-generated from contract terms</span></h3>
+          <div class="table-wrap" style="border:none;">
+            <table>
+              <thead><tr><th>#</th><th>Period</th><th>Due Date</th><th>Amount</th><th>Invoice</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td data-label="#">1</td><td data-label="Period">Jan 2026</td><td data-label="Due">Jan 01</td><td data-label="Amount">$1,450</td><td data-label="Invoice">INV-1101</td><td data-label="Paid">$1,450</td><td data-label="Balance">$0</td><td data-label="Status"><span class="badge ok">Paid</span></td></tr>
+                <tr><td data-label="#">2</td><td data-label="Period">Feb 2026</td><td data-label="Due">Feb 01</td><td data-label="Amount">$1,450</td><td data-label="Invoice">INV-1122</td><td data-label="Paid">$1,450</td><td data-label="Balance">$0</td><td data-label="Status"><span class="badge ok">Paid</span></td></tr>
+                <tr><td data-label="#">7</td><td data-label="Period">Jul 2026</td><td data-label="Due">Jul 01</td><td data-label="Amount">$1,450</td><td data-label="Invoice">INV-1310</td><td data-label="Paid">$900</td><td data-label="Balance">$550</td><td data-label="Status"><span class="badge warn">Partial</span></td></tr>
+                <tr><td data-label="#">8</td><td data-label="Period">Aug 2026</td><td data-label="Due">Aug 01</td><td data-label="Amount">$1,450</td><td data-label="Invoice">INV-1355</td><td data-label="Paid">$0</td><td data-label="Balance">$1,450</td><td data-label="Status"><span class="badge bad">Overdue</span></td></tr>
+                <tr><td data-label="#">9</td><td data-label="Period">Sep 2026</td><td data-label="Due">Sep 01</td><td data-label="Amount">$1,450</td><td data-label="Invoice">— not generated —</td><td data-label="Paid">—</td><td data-label="Balance">—</td><td data-label="Status"><span class="badge neutral">Upcoming</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- 8. RENT INVOICES -->
+      <!-- ======================================================= -->
+      <section class="view" id="view-invoices">
+        <div class="section-head">
+          <div><h2>Rent Invoices</h2><p>Generated bills for each rent schedule period</p></div>
+          <div class="actions">
+            <button class="btn ghost">Export</button>
+            <button class="btn primary">+ Generate Invoices</button>
+          </div>
+        </div>
+
+        <div class="pill-tabs">
+          <div class="tab active">All</div>
+          <div class="tab">Paid</div>
+          <div class="tab">Partially Paid</div>
+          <div class="tab">Overdue</div>
+        </div>
+
+        <div class="filter-bar">
+          <div class="field grow"><label>Search</label><input placeholder="Invoice #, tenant or unit"></div>
+          <div class="field"><label>Property</label><select><option>All Properties</option></select></div>
+          <div class="field"><label>Period</label><select><option>September 2026</option><option>August 2026</option></select></div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Invoice #</th><th>Tenant / Unit</th><th>Period</th><th>Due Date</th><th>Amount</th><th>Paid</th><th>Balance</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr onclick="go('payments')"><td data-label="Invoice"><span class="row-link">INV-1355</span></td><td data-label="Tenant">R. Haddad<div class="cell-sub">Cedar Court 4B</div></td><td data-label="Period">Aug 2026</td><td data-label="Due">Aug 01</td><td data-label="Amount">$1,450</td><td data-label="Paid">$0</td><td data-label="Balance">$1,450</td><td data-label="Status"><span class="badge bad">Overdue</span></td><td>Record Payment</td></tr>
+              <tr onclick="go('payments')"><td data-label="Invoice"><span class="row-link">INV-1358</span></td><td data-label="Tenant">S. Nasr<div class="cell-sub">Cedar Court 2A</div></td><td data-label="Period">Aug 2026</td><td data-label="Due">Aug 01</td><td data-label="Amount">$1,050</td><td data-label="Paid">$650</td><td data-label="Balance">$400</td><td data-label="Status"><span class="badge warn">Partial</span></td><td>Record Payment</td></tr>
+              <tr onclick="go('payments')"><td data-label="Invoice"><span class="row-link">INV-1360</span></td><td data-label="Tenant">M. Aoun<div class="cell-sub">Cedar Court 1A</div></td><td data-label="Period">Aug 2026</td><td data-label="Due">Aug 01</td><td data-label="Amount">$980</td><td data-label="Paid">$980</td><td data-label="Balance">$0</td><td data-label="Status"><span class="badge ok">Paid</span></td><td>View Receipt</td></tr>
+              <tr onclick="go('payments')"><td data-label="Invoice"><span class="row-link">INV-1362</span></td><td data-label="Tenant">K. Fares<div class="cell-sub">Marina View 7F</div></td><td data-label="Period">Sep 2026</td><td data-label="Due">Sep 05</td><td data-label="Amount">$1,750</td><td data-label="Paid">$0</td><td data-label="Balance">$1,750</td><td data-label="Status"><span class="badge neutral">Scheduled</span></td><td>Record Payment</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel mt-16">
+          <h3>Invoice Detail <span class="muted">— INV-1358, example expanded view</span></h3>
+          <div class="form-grid cols-3">
+            <div class="stat-line"><span class="k">Tenant</span><span class="v">S. Nasr</span></div>
+            <div class="stat-line"><span class="k">Unit</span><span class="v">Cedar Court 2A</span></div>
+            <div class="stat-line"><span class="k">Period</span><span class="v">Aug 01 – Aug 31, 2026</span></div>
+            <div class="stat-line"><span class="k">Rent charge</span><span class="v">$1,050.00</span></div>
+            <div class="stat-line"><span class="k">Late fee</span><span class="v">$0.00</span></div>
+            <div class="stat-line"><span class="k">Total due</span><span class="v">$1,050.00</span></div>
+          </div>
+          <div class="divider"></div>
+          <h3>Payment History Against This Invoice</h3>
+          <div class="table-wrap" style="border:none;">
+            <table>
+              <thead><tr><th>Date</th><th>Method</th><th>Amount</th><th>Type</th></tr></thead>
+              <tbody>
+                <tr><td data-label="Date">Aug 03</td><td data-label="Method">Bank Transfer</td><td data-label="Amount">$650.00</td><td data-label="Type"><span class="badge warn">Partial Payment</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- 9. RECORD PAYMENT -->
+      <!-- ======================================================= -->
+      <section class="view" id="view-payments">
+        <div class="section-head">
+          <div><h2>Record Payment</h2><p>Apply full or partial payments against one or more invoices</p></div>
+        </div>
+
+        <div class="grid-2" style="grid-template-columns:1fr 1.2fr;">
+          <div class="panel">
+            <h3>New Payment</h3>
+            <div class="form-grid">
+              <div class="form-field span-2"><label>Tenant</label><select><option>S. Nasr — Cedar Court 2A</option></select></div>
+              <div class="form-field span-2"><label>Apply To Invoice</label><select><option>INV-1358 — Aug 2026 — Balance $400.00</option><option>INV-1310 — Jul 2026 — Balance $550.00</option></select></div>
+              <div class="form-field"><label>Payment Amount</label><input type="text" value="$400.00"></div>
+              <div class="form-field"><label>Payment Type</label><select><option>Full Payment</option><option selected>Partial Payment</option></select></div>
+              <div class="form-field"><label>Payment Method</label><select><option>Bank Transfer</option><option>Cash</option><option>Cheque</option><option>Card</option></select></div>
+              <div class="form-field"><label>Payment Date</label><input type="text" value="28 / 08 / 2026"></div>
+              <div class="form-field span-2"><label>Reference / Notes <span class="hint">optional</span></label><input placeholder="e.g. Transfer ref #, cheque no."></div>
+            </div>
+            <div class="checkbox-row mt-16"><input type="checkbox"> Send receipt to tenant by email</div>
+            <div class="form-actions">
+              <button class="btn ghost">Cancel</button>
+              <button class="btn primary">Record Payment</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3>Invoice Balance Preview</h3>
+            <div class="stat-line"><span class="k">Invoice</span><span class="v">INV-1358 — August 2026</span></div>
+            <div class="stat-line"><span class="k">Total due</span><span class="v">$1,050.00</span></div>
+            <div class="stat-line"><span class="k">Already paid</span><span class="v">$650.00</span></div>
+            <div class="stat-line"><span class="k">Applying now</span><span class="v pos">+$400.00</span></div>
+            <div class="stat-line"><span class="k">Remaining balance after</span><span class="v">$0.00</span></div>
+            <div class="divider"></div>
+            <div class="progress"><div class="fill" style="width:100%"></div></div>
+            <p class="muted" style="font-size:11.5px;margin-top:8px;">This payment brings invoice INV-1358 to fully paid.</p>
+
+            <div class="divider"></div>
+            <h3>Recent Payments</h3>
+            <div class="table-wrap" style="border:none;">
+              <table>
+                <thead><tr><th>Date</th><th>Tenant</th><th>Invoice</th><th>Amount</th><th>Method</th></tr></thead>
+                <tbody>
+                  <tr><td data-label="Date">Aug 26</td><td data-label="Tenant">M. Aoun</td><td data-label="Invoice">INV-1360</td><td data-label="Amount">$980.00</td><td data-label="Method">Cash</td></tr>
+                  <tr><td data-label="Date">Aug 24</td><td data-label="Tenant">D. Saab</td><td data-label="Invoice">INV-1349</td><td data-label="Amount">$3,600.00</td><td data-label="Method">Bank Transfer</td></tr>
+                  <tr><td data-label="Date">Aug 20</td><td data-label="Tenant">S. Nasr</td><td data-label="Invoice">INV-1358</td><td data-label="Amount">$650.00</td><td data-label="Method">Bank Transfer</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- 10. SECURITY DEPOSITS -->
+      <!-- ======================================================= -->
+      <section class="view" id="view-deposits">
+        <div class="section-head">
+          <div><h2>Security Deposits</h2><p>Deposits held, deducted and refunded across all contracts</p></div>
+          <div class="actions"><button class="btn primary">+ Record Deposit</button></div>
+        </div>
+
+        <div class="kpi-row" style="grid-template-columns:repeat(3,1fr);">
+          <div class="kpi-card"><div class="lbl">Total Held</div><div class="val">$142,600</div><div class="delta">108 active deposits</div></div>
+          <div class="kpi-card"><div class="lbl">Refunded (YTD)</div><div class="val">$18,300</div><div class="delta">14 refunds processed</div></div>
+          <div class="kpi-card"><div class="lbl">Pending Refund</div><div class="val">$4,200</div><div class="delta down">3 move-outs awaiting inspection</div></div>
+        </div>
+
+        <div class="pill-tabs">
+          <div class="tab active">All</div>
+          <div class="tab">Held</div>
+          <div class="tab">Pending Refund</div>
+          <div class="tab">Refunded</div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Tenant</th><th>Unit</th><th>Deposit Amount</th><th>Date Collected</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr><td data-label="Tenant">R. Haddad</td><td data-label="Unit">Cedar Court 4B</td><td data-label="Amount">$2,900</td><td data-label="Collected">Jan 01 2026</td><td data-label="Status"><span class="badge ok">Held</span></td><td class="row-link">View</td></tr>
+              <tr><td data-label="Tenant">J. Khalil</td><td data-label="Unit">Palm Residence 5D</td><td data-label="Amount">$1,300</td><td data-label="Collected">Sep 15 2025</td><td data-label="Status"><span class="badge warn">Pending Refund</span></td><td class="row-link">Process Refund</td></tr>
+              <tr><td data-label="Tenant">P. Chami</td><td data-label="Unit">Downtown Offices A3</td><td data-label="Amount">$18,000</td><td data-label="Collected">Jun 01 2025</td><td data-label="Status"><span class="badge neutral">Refunded</span></td><td class="row-link">View</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel mt-16">
+          <h3>Deposit Refund <span class="muted">— J. Khalil, Palm Residence 5D</span></h3>
+          <div class="form-grid">
+            <div class="form-field"><label>Original Deposit</label><input value="$1,300.00" disabled></div>
+            <div class="form-field"><label>Move-Out Date</label><input type="text" value="14 / 09 / 2026"></div>
+          </div>
+          <div class="divider"></div>
+          <h3 style="margin-bottom:8px;">Deductions</h3>
+          <div class="table-wrap" style="border:none;">
+            <table>
+              <thead><tr><th>Description</th><th>Category</th><th>Amount</th></tr></thead>
+              <tbody>
+                <tr><td data-label="Description">Wall repair — living room</td><td data-label="Category">Damage</td><td data-label="Amount">$120.00</td></tr>
+                <tr><td data-label="Description">Outstanding rent balance</td><td data-label="Category">Unpaid Rent</td><td data-label="Amount">$0.00</td></tr>
+                <tr><td data-label="Description">Cleaning fee</td><td data-label="Category">Cleaning</td><td data-label="Amount">$60.00</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <button class="btn ghost small mt-16">+ Add Deduction Line</button>
+          <div class="divider"></div>
+          <div class="form-grid">
+            <div class="stat-line"><span class="k">Total deductions</span><span class="v neg">-$180.00</span></div>
+            <div class="stat-line"><span class="k">Refund amount</span><span class="v pos">$1,120.00</span></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn ghost">Cancel</button>
+            <button class="btn primary">Confirm Refund</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- 11. TENANT STATEMENT -->
+      <!-- ======================================================= -->
+      <section class="view" id="view-statement">
+        <div class="crumb mb-16"><span class="breadcrumb-link" onclick="go('tenants')">Tenants</span> / <b>R. Haddad — Statement</b></div>
+
+        <div class="grid-2" style="grid-template-columns:1fr 1fr;">
+          <div class="panel">
+            <h3>Tenant</h3>
+            <div class="stat-line"><span class="k">Name</span><span class="v">R. Haddad</span></div>
+            <div class="stat-line"><span class="k">Unit</span><span class="v">Cedar Court — 4B</span></div>
+            <div class="stat-line"><span class="k">Contract</span><span class="v">LC-2024-118 (Active)</span></div>
+            <div class="stat-line"><span class="k">Phone</span><span class="v">+961 3 456 789</span></div>
+          </div>
+          <div class="panel">
+            <h3>Balance Summary</h3>
+            <div class="stat-line"><span class="k">Total billed</span><span class="v">$11,600.00</span></div>
+            <div class="stat-line"><span class="k">Total paid</span><span class="v">$10,150.00</span></div>
+            <div class="stat-line"><span class="k">Current balance due</span><span class="v neg">$1,450.00</span></div>
+            <div class="stat-line"><span class="k">Deposit on file</span><span class="v">$2,900.00 (Held)</span></div>
+          </div>
+        </div>
+
+        <div class="section-head mt-16">
+          <div><h2 style="font-size:15px;">Statement of Account</h2><p>All charges and payments, running balance</p></div>
+          <div class="actions">
+            <select style="border:1px solid var(--line-soft);border-radius:4px;padding:8px 10px;font-size:12.5px;">
+              <option>Jan 2026 – Present</option>
+              <option>Last 90 days</option>
+            </select>
+            <button class="btn ghost">Export PDF</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Description</th><th>Charge</th><th>Payment</th><th>Balance</th></tr></thead>
+            <tbody>
+              <tr><td data-label="Date">Jan 01</td><td data-label="Desc">Rent — January 2026 (INV-1101)</td><td data-label="Charge">$1,450.00</td><td data-label="Payment">—</td><td data-label="Balance">$1,450.00</td></tr>
+              <tr><td data-label="Date">Jan 03</td><td data-label="Desc">Payment received — Bank Transfer</td><td data-label="Charge">—</td><td data-label="Payment">$1,450.00</td><td data-label="Balance">$0.00</td></tr>
+              <tr><td data-label="Date">Feb 01</td><td data-label="Desc">Rent — February 2026 (INV-1122)</td><td data-label="Charge">$1,450.00</td><td data-label="Payment">—</td><td data-label="Balance">$1,450.00</td></tr>
+              <tr><td data-label="Date">Feb 02</td><td data-label="Desc">Payment received — Bank Transfer</td><td data-label="Charge">—</td><td data-label="Payment">$1,450.00</td><td data-label="Balance">$0.00</td></tr>
+              <tr><td data-label="Date">Jul 01</td><td data-label="Desc">Rent — July 2026 (INV-1310)</td><td data-label="Charge">$1,450.00</td><td data-label="Payment">—</td><td data-label="Balance">$1,450.00</td></tr>
+              <tr><td data-label="Date">Jul 05</td><td data-label="Desc">Partial payment — Cash</td><td data-label="Charge">—</td><td data-label="Payment">$900.00</td><td data-label="Balance">$550.00</td></tr>
+              <tr><td data-label="Date">Aug 01</td><td data-label="Desc">Rent — August 2026 (INV-1355)</td><td data-label="Charge">$1,450.00</td><td data-label="Payment">—</td><td data-label="Balance">$2,000.00</td></tr>
+              <tr style="background:#faf3f2;"><td data-label="Date"><b>Today</b></td><td data-label="Desc"><b>Running balance</b></td><td data-label="Charge">—</td><td data-label="Payment">—</td><td data-label="Balance"><b>$1,450.00 (partial pmt applied)</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- 12. MAINTENANCE -->
+      <!-- ======================================================= -->
+      <section class="view" id="view-maintenance">
+        <div class="section-head">
+          <div><h2>Maintenance</h2><p>Repair and service requests across the portfolio</p></div>
+          <div class="actions"><button class="btn primary">+ New Request</button></div>
+        </div>
+
+        <div class="pill-tabs">
+          <div class="tab active">Open (9)</div>
+          <div class="tab">In Progress (4)</div>
+          <div class="tab">Completed (52)</div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Request #</th><th>Property / Unit</th><th>Issue</th><th>Reported By</th><th>Assigned To</th><th>Est. Cost</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td data-label="ID">MR-441</td><td data-label="Unit">Cedar Court 2A</td><td data-label="Issue">Kitchen faucet leak</td><td data-label="By">S. Nasr (tenant)</td><td data-label="Assigned">Plumbing — A. Saade</td><td data-label="Cost">$85</td><td data-label="Status"><span class="badge warn">In Progress</span></td></tr>
+              <tr><td data-label="ID">MR-442</td><td data-label="Unit">Marina View 7F</td><td data-label="Issue">AC not cooling</td><td data-label="By">K. Fares (tenant)</td><td data-label="Assigned">Unassigned</td><td data-label="Cost">— pending quote</td><td data-label="Status"><span class="badge bad">Open</span></td></tr>
+              <tr><td data-label="ID">MR-437</td><td data-label="Unit">Palm Residence — Lobby</td><td data-label="Issue">Elevator servicing</td><td data-label="By">Property Manager</td><td data-label="Assigned">Otis Contract</td><td data-label="Cost">$420</td><td data-label="Status"><span class="badge warn">In Progress</span></td></tr>
+              <tr><td data-label="ID">MR-430</td><td data-label="Unit">Cedar Court 1A</td><td data-label="Issue">Repaint hallway</td><td data-label="By">Property Manager</td><td data-label="Assigned">M. Younes Painting</td><td data-label="Cost">$310</td><td data-label="Status"><span class="badge ok">Completed</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- 13. EXPENSES -->
+      <!-- ======================================================= -->
+      <section class="view" id="view-expenses">
+        <div class="section-head">
+          <div><h2>Expenses</h2><p>Operating costs recorded against each property</p></div>
+          <div class="actions"><button class="btn primary">+ Add Expense</button></div>
+        </div>
+
+        <div class="filter-bar">
+          <div class="field grow"><label>Search</label><input placeholder="Vendor or description"></div>
+          <div class="field"><label>Property</label><select><option>All Properties</option></select></div>
+          <div class="field"><label>Category</label><select><option>All</option><option>Maintenance</option><option>Utilities</option><option>Insurance</option><option>Management Fee</option></select></div>
+          <div class="field"><label>Paid By</label><select><option>All</option><option>Owner</option><option>Company</option></select></div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Property</th><th>Category</th><th>Vendor</th><th>Description</th><th>Amount</th><th>Paid By</th></tr></thead>
+            <tbody>
+              <tr><td data-label="Date">Aug 24</td><td data-label="Property">Cedar Court</td><td data-label="Category">Maintenance</td><td data-label="Vendor">A. Saade Plumbing</td><td data-label="Description">Faucet repair — Unit 2A</td><td data-label="Amount">$85.00</td><td data-label="Paid By">Owner</td></tr>
+              <tr><td data-label="Date">Aug 20</td><td data-label="Property">Palm Residence</td><td data-label="Category">Utilities</td><td data-label="Vendor">EDL</td><td data-label="Description">Common area electricity</td><td data-label="Amount">$640.00</td><td data-label="Paid By">Owner</td></tr>
+              <tr><td data-label="Date">Aug 15</td><td data-label="Property">Marina View Tower</td><td data-label="Category">Insurance</td><td data-label="Vendor">LibanPost Insurance</td><td data-label="Description">Annual building policy — installment</td><td data-label="Amount">$1,200.00</td><td data-label="Paid By">Owner</td></tr>
+              <tr><td data-label="Date">Aug 01</td><td data-label="Property">All Properties</td><td data-label="Category">Management Fee</td><td data-label="Vendor">Keystone RMS</td><td data-label="Description">Monthly management fee — August</td><td data-label="Amount">$6,200.00</td><td data-label="Paid By">Company</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- 14. REPORTS / RENTAL INCOME -->
+      <!-- ======================================================= -->
+      <section class="view" id="view-reports">
+        <div class="section-head">
+          <div><h2>Rental Income Reports</h2><p>Billing, collection and net income by property or owner</p></div>
+          <div class="actions">
+            <select style="border:1px solid var(--line-soft);border-radius:4px;padding:8px 10px;font-size:12.5px;"><option>By Property</option><option>By Owner</option><option>By Month</option></select>
+            <button class="btn ghost">Export</button>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <div class="field"><label>From</label><input type="text" value="01 / 01 / 2026"></div>
+          <div class="field"><label>To</label><input type="text" value="31 / 08 / 2026"></div>
+          <div class="field"><label>Property</label><select><option>All Properties</option></select></div>
+          <div class="field"><label>Owner</label><select><option>All Owners</option></select></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <h3>Rent Billed vs Collected <span class="muted">(Jan – Aug 2026)</span></h3>
+            <div class="chart-box">
+              <div class="bars">
+                <div class="bar" style="height:64%"></div>
+                <div class="bar" style="height:70%"></div>
+                <div class="bar" style="height:66%"></div>
+                <div class="bar" style="height:78%"></div>
+                <div class="bar" style="height:73%"></div>
+                <div class="bar" style="height:85%"></div>
+                <div class="bar" style="height:69%"></div>
+                <div class="bar" style="height:81%"></div>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Portfolio Totals</h3>
+            <div class="stat-line"><span class="k">Total rent billed</span><span class="v">$1,102,400</span></div>
+            <div class="stat-line"><span class="k">Total collected</span><span class="v pos">$986,150</span></div>
+            <div class="stat-line"><span class="k">Total outstanding</span><span class="v neg">$116,250</span></div>
+            <div class="stat-line"><span class="k">Total expenses</span><span class="v">$142,900</span></div>
+            <div class="stat-line"><span class="k">Net rental income</span><span class="v pos">$843,250</span></div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Property</th><th>Rent Billed</th><th>Rent Collected</th><th>Outstanding</th><th>Expenses</th><th>Net Income</th></tr></thead>
+            <tbody>
+              <tr><td data-label="Property">Cedar Court</td><td data-label="Billed">$129,600</td><td data-label="Collected">$118,900</td><td data-label="Outstanding">$10,700</td><td data-label="Expenses">$14,300</td><td data-label="Net">$104,600</td></tr>
+              <tr><td data-label="Property">Palm Residence</td><td data-label="Billed">$231,200</td><td data-label="Collected">$205,450</td><td data-label="Outstanding">$25,750</td><td data-label="Expenses">$28,900</td><td data-label="Net">$176,550</td></tr>
+              <tr><td data-label="Property">Marina View Tower</td><td data-label="Billed">$491,600</td><td data-label="Collected">$460,300</td><td data-label="Outstanding">$31,300</td><td data-label="Expenses">$61,200</td><td data-label="Net">$399,100</td></tr>
+              <tr><td data-label="Property">Downtown Offices A</td><td data-label="Billed">$176,000</td><td data-label="Collected">$141,500</td><td data-label="Outstanding">$34,500</td><td data-label="Expenses">$22,000</td><td data-label="Net">$119,500</td></tr>
+              <tr><td data-label="Property">Hillside Villas</td><td data-label="Billed">$74,000</td><td data-label="Collected">$60,000</td><td data-label="Outstanding">$14,000</td><td data-label="Expenses">$16,500</td><td data-label="Net">$43,500</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const titles = {
+    'dashboard':'Dashboard',
+    'properties':'Properties',
+    'property-detail':'Property Detail — Units',
+    'owners':'Owners',
+    'tenants':'Tenants',
+    'contracts':'Rental Contracts',
+    'contract-detail':'Contract & Rent Schedule',
+    'invoices':'Rent Invoices',
+    'payments':'Record Payment',
+    'deposits':'Security Deposits',
+    'statement':'Tenant Statement',
+    'maintenance':'Maintenance',
+    'expenses':'Expenses',
+    'reports':'Rental Income Reports'
+  };
+  const groups = {
+    'dashboard':'Overview',
+    'properties':'Portfolio','property-detail':'Portfolio','owners':'Portfolio','tenants':'Portfolio',
+    'contracts':'Leasing','contract-detail':'Leasing',
+    'invoices':'Billing & Payments','payments':'Billing & Payments','deposits':'Billing & Payments','statement':'Billing & Payments',
+    'maintenance':'Operations','expenses':'Operations',
+    'reports':'Insights'
+  };
+
+  function go(view){
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-'+view).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    const navEl = document.querySelector('.nav-item[data-view="'+view+'"]');
+    if(navEl) navEl.classList.add('active');
+    document.getElementById('pageTitle').textContent = titles[view];
+    document.getElementById('crumb').innerHTML = groups[view] + ' / <b>' + titles[view] + '</b>';
+    document.querySelector('.content').scrollTop = 0;
+    window.scrollTo(0,0);
+    closeSidebar();
+  }
+  function openSidebar(){
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('overlay').classList.add('show');
+  }
+  function closeSidebar(){
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('show');
+  }
+</script>
+
+</body>
+</html>

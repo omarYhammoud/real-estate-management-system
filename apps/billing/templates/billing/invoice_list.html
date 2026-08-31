@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Invoices</h1>
+<ul>
+    {% for invoice in invoices %}<li>{{ invoice.invoice_reference }} — {{ invoice.total_amount }} ({{ invoice.status }})</li>{% endfor %}
+</ul>
+{% endblock %}

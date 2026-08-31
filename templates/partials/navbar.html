@@ -1,0 +1,14 @@
+<nav class="navbar">
+    <a class="navbar-brand" href="{% url 'finance:dashboard' %}">Real Estate MS</a>
+    <ul class="navbar-links">
+        <li><a href="{% url 'properties:property_list' %}">Properties</a></li>
+        <li><a href="{% url 'billing:invoice_list' %}">Invoices</a></li>
+        <li><a href="{% url 'operations:maintenance_list' %}">Maintenance</a></li>
+        <li><a href="{% url 'finance:dashboard' %}">Dashboard</a></li>
+        {% if user.is_authenticated %}
+            <li><a href="{% url 'accounts:logout' %}">Logout ({{ user }})</a></li>
+        {% else %}
+            <li><a href="{% url 'accounts:login' %}">Login</a></li>
+        {% endif %}
+    </ul>
+</nav>

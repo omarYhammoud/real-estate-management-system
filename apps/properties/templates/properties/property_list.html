@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Properties</h1>
+<ul>
+    {% for property in properties %}<li>{{ property.name }} — {{ property.address }}</li>{% endfor %}
+</ul>
+{% endblock %}

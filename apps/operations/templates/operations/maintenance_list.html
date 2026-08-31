@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Maintenance Requests</h1>
+<ul>
+    {% for r in requests %}<li>{{ r.property.name }} — {{ r.issue }} ({{ r.status }})</li>{% endfor %}
+</ul>
+{% endblock %}
