@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Security Deposits — RealEstate OS{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Security Deposits</h1>
+        <p style="color: var(--slate-500); font-size: 0.9rem; margin-top: 4px;">Track tenant held deposits, deductions, and refunds.</p>
+    </div>
+    <a href="{% url 'operations:deposit_create' %}" class="btn btn-primary">+ New Security Deposit</a>
+</div>
+
+<div class="table-card">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Contract Reference</th>
+                <th>Required</th>
+                <th>Received</th>
+                <th>Remaining Balance</th>
+                <th>Status</th>
+                <th>Received Date</th>
+                <th style="text-align: right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for deposit in deposits %}
+            <tr>
+                <td><strong>{{ deposit.contract.contract_reference }}</strong></td>
+                <td>${{ deposit.required_amount }}</td>
+                <td>${{ deposit.received_amount }}</td>
+                <td><strong style="color: var(--primary-600);">${{ deposit.remaining_balance }}</strong></td>
+                <td><span class="badge badge-{{ deposit.status }}">{{ deposit.get_status_display }}</span></td>
+                <td>{{ deposit.received_date|default:"—" }}</td>
+                <td style="text-align: right;">
+                    <a href="{% url 'operations:deposit_detail' deposit.pk %}" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;">View</a>
+                    <a href="{% url 'operations:deposit_edit' deposit.pk %}" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem;">Edit</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 36px; color: var(--slate-400);">
+                    No security deposits recorded yet.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if is_paginated %}
+<div class="pagination">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}
+    <span>Page {{ page_obj.number }} of {{ page_obj.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Next</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

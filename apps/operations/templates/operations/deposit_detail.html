@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Deposit — {{ deposit.contract.contract_reference }} | RealEstate OS{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Security Deposit: {{ deposit.contract.contract_reference }}</h1>
+        <p style="color: var(--slate-500); font-size: 0.9rem; margin-top: 4px;">Tenant: {{ deposit.contract.tenant }} • Unit: {{ deposit.contract.unit }}</p>
+    </div>
+    <div style="display: flex; gap: 8px;">
+        <a href="{% url 'operations:deposit_edit' deposit.pk %}" class="btn btn-secondary">Edit Deposit</a>
+        <a href="{% url 'operations:deposit_list' %}" class="btn btn-outline">← All Deposits</a>
+    </div>
+</div>
+
+<div class="detail-card">
+    <div class="detail-row"><span class="label">Contract</span><span>{{ deposit.contract.contract_reference }}</span></div>
+    <div class="detail-row"><span class="label">Tenant</span><span>{{ deposit.contract.tenant }}</span></div>
+    <div class="detail-row"><span class="label">Unit</span><span>{{ deposit.contract.unit }}</span></div>
+    <div class="detail-row"><span class="label">Required Amount</span><span>${{ deposit.required_amount }}</span></div>
+    <div class="detail-row"><span class="label">Received Amount</span><span>${{ deposit.received_amount }}</span></div>
+    <div class="detail-row"><span class="label">Received Date</span><span>{{ deposit.received_date|default:"—" }}</span></div>
+    <div class="detail-row"><span class="label">Status</span><div><span class="badge badge-{{ deposit.status }}">{{ deposit.get_status_display }}</span></div></div>
+    <div class="detail-row balance-row">
+        <span class="label">Available Remaining Balance</span>
+        <span class="balance-amount">${{ deposit.remaining_balance }}</span>
+    </div>
+</div>
+
+<!-- Deductions -->
+<div class="section-header">
+    <h2>Deductions</h2>
+    <a href="{% url 'operations:deduction_add' deposit.pk %}" class="btn btn-primary">+ Add Deduction</a>
+</div>
+<div class="table-card">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Reason</th>
+                <th>Authorized By</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in deductions %}
+            <tr>
+                <td>{{ d.deduction_date }}</td>
+                <td><strong style="color: var(--rose-700);">${{ d.amount }}</strong></td>
+                <td>{{ d.reason }}</td>
+                <td>{{ d.authorized_by|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" style="text-align: center; padding: 24px; color: var(--slate-400);">No deductions recorded.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Refunds -->
+<div class="section-header">
+    <h2>Refunds</h2>
+    <a href="{% url 'operations:refund_add' deposit.pk %}" class="btn btn-primary">+ Add Refund</a>
+</div>
+<div class="table-card">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Reference</th>
+                <th>Authorized By</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in refunds %}
+            <tr>
+                <td>{{ r.refund_date }}</td>
+                <td><strong style="color: var(--emerald-700);">${{ r.amount }}</strong></td>
+                <td>{{ r.refund_method|default:"—" }}</td>
+                <td><code>{{ r.refund_reference }}</code></td>
+                <td>{{ r.authorized_by|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--slate-400);">No refunds recorded.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

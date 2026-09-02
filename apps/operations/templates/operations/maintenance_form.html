@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}{% if object %}Edit Maintenance Request{% else %}New Maintenance Request{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{% if object %}Edit Maintenance Request{% else %}New Maintenance Request{% endif %}</h1>
+    <a href="{% url 'operations:maintenance_list' %}" class="btn btn-outline">← Back to List</a>
+</div>
+
+<div class="form-card">
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+            <ul class="form-errors">
+                {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+            {% endif %}
+            {% if field.help_text %}<small class="help-text">{{ field.help_text }}</small>{% endif %}
+        </div>
+        {% endfor %}
+        {% if form.non_field_errors %}
+        <ul class="form-errors">
+            {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                {% if object %}Save Changes{% else %}Create Request{% endif %}
+            </button>
+            <a href="{% url 'operations:maintenance_list' %}" class="btn btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

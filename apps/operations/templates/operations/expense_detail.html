@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Expense — {{ expense.expense_reference }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Expense: {{ expense.expense_reference }}</h1>
+    <div>
+        <a href="{% url 'operations:expense_edit' expense.pk %}" class="btn btn-secondary">Edit</a>
+        <a href="{% url 'operations:expense_list' %}" class="btn btn-outline">← All Expenses</a>
+    </div>
+</div>
+
+<div class="detail-card">
+    <div class="detail-row"><span class="label">Reference</span><span>{{ expense.expense_reference }}</span></div>
+    <div class="detail-row"><span class="label">Category</span><span>{{ expense.get_category_display }}</span></div>
+    <div class="detail-row"><span class="label">Amount</span><span>{{ expense.amount }}</span></div>
+    <div class="detail-row"><span class="label">Expense Date</span><span>{{ expense.expense_date }}</span></div>
+    <div class="detail-row"><span class="label">Status</span>
+        <span class="badge badge-status-{{ expense.status }}">{{ expense.get_status_display }}</span>
+    </div>
+    <div class="detail-row"><span class="label">Property</span><span>{{ expense.property.name|default:"—" }}</span></div>
+    <div class="detail-row"><span class="label">Unit</span><span>{{ expense.unit|default:"—" }}</span></div>
+    <div class="detail-row"><span class="label">Recorded By</span><span>{{ expense.recorded_by|default:"—" }}</span></div>
+    <div class="detail-row"><span class="label">Description</span></div>
+    <div class="issue-text">{{ expense.description|default:"No description provided." }}</div>
+    <div class="detail-row"><span class="label">Recorded At</span><span>{{ expense.created_at|date:"Y-m-d H:i" }}</span></div>
+    <div class="detail-row"><span class="label">Last Updated</span><span>{{ expense.updated_at|date:"Y-m-d H:i" }}</span></div>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Add Deduction — {{ deposit.contract.contract_reference }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Add Deduction</h1>
+    <a href="{% url 'operations:deposit_detail' deposit.pk %}" class="btn btn-outline">← Back to Deposit</a>
+</div>
+
+<div class="info-callout">
+    <strong>Deposit:</strong> {{ deposit.contract.contract_reference }} &nbsp;|&nbsp;
+    <strong>Available Balance:</strong> {{ deposit.remaining_balance }}
+</div>
+
+<div class="form-card">
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+            <ul class="form-errors">
+                {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% if form.non_field_errors %}
+        <ul class="form-errors">
+            {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Add Deduction</button>
+            <a href="{% url 'operations:deposit_detail' deposit.pk %}" class="btn btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

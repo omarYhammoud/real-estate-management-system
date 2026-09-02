@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Maintenance Request #{{ maintenance.pk }} — RealEstate OS{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Maintenance Request #{{ maintenance.pk }}</h1>
+        <p style="color: var(--slate-500); font-size: 0.9rem; margin-top: 4px;">Property: {{ maintenance.property.name }}</p>
+    </div>
+    <div style="display: flex; gap: 8px;">
+        <a href="{% url 'operations:maintenance_edit' maintenance.pk %}" class="btn btn-secondary">Edit Request</a>
+        <a href="{% url 'operations:maintenance_list' %}" class="btn btn-outline">← All Requests</a>
+    </div>
+</div>
+
+<div class="detail-card">
+    <div class="detail-row"><span class="label">Property</span><span>{{ maintenance.property.name }}</span></div>
+    <div class="detail-row"><span class="label">Unit</span><span>{{ maintenance.unit|default:"—" }}</span></div>
+    <div class="detail-row"><span class="label">Tenant</span><span>{{ maintenance.tenant|default:"—" }}</span></div>
+    <div class="detail-row"><span class="label">Priority</span>
+        <div><span class="badge badge-priority-{{ maintenance.priority }}">{{ maintenance.get_priority_display }}</span></div>
+    </div>
+    <div class="detail-row"><span class="label">Status</span>
+        <div><span class="badge badge-status-{{ maintenance.status }}">{{ maintenance.get_status_display }}</span></div>
+    </div>
+    <div class="detail-row"><span class="label">Request Date</span><span>{{ maintenance.request_date }}</span></div>
+    <div class="detail-row"><span class="label">Estimated Cost</span><span>{% if maintenance.cost %}${{ maintenance.cost }}{% else %}Not yet estimated{% endif %}</span></div>
+    <div class="detail-row"><span class="label">Issue Description</span></div>
+    <div class="issue-text">{{ maintenance.issue }}</div>
+    <div class="detail-row"><span class="label">Recorded At</span><span>{{ maintenance.created_at|date:"Y-m-d H:i" }}</span></div>
+    <div class="detail-row"><span class="label">Last Updated</span><span>{{ maintenance.updated_at|date:"Y-m-d H:i" }}</span></div>
+</div>
+{% endblock %}
