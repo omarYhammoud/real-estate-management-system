@@ -1,12 +1,24 @@
-<nav class="navbar">
-    <a class="navbar-brand" href="{% url 'finance:dashboard' %}">Real Estate MS</a>
-    <ul class="navbar-links">
+<nav class="navbar" aria-label="Primary navigation">
+    <a class="navbar-brand" href="{% url 'finance:dashboard' %}">
+        <span class="brand-mark" aria-hidden="true">KR</span>
+        <span><strong>Keystone RMS</strong><small>Real Estate Management</small></span>
+    </a>
+    <ul class="navbar-links" role="list">
         <li><a href="{% url 'properties:property_list' %}">Properties</a></li>
         <li><a href="{% url 'billing:invoice_list' %}">Invoices</a></li>
         <li><a href="{% url 'operations:maintenance_list' %}">Maintenance</a></li>
         <li><a href="{% url 'finance:dashboard' %}">Dashboard</a></li>
         {% if user.is_authenticated %}
-            <li><a href="{% url 'accounts:logout' %}">Logout ({{ user }})</a></li>
+            <li class="user-summary">
+                <span class="user-avatar" aria-hidden="true">{{ user.username|first|upper }}</span>
+                <span><strong>{{ user }}</strong><small>{% if user.is_superuser %}Administrator{% else %}{{ user.get_role_display }}{% endif %}</small></span>
+            </li>
+            <li>
+                <form class="logout-form" method="post" action="{% url 'accounts:logout' %}">
+                    {% csrf_token %}
+                    <button class="button button-quiet button-on-dark" type="submit">Log out</button>
+                </form>
+            </li>
         {% else %}
             <li><a href="{% url 'accounts:login' %}">Login</a></li>
         {% endif %}

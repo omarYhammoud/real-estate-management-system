@@ -1,3 +1,14 @@
 <aside class="sidebar">
-    <!-- Team: add role-specific quick links here as each module gets pages. -->
+    <nav aria-label="Application navigation">
+        <p class="sidebar-label">Workspace</p>
+        <a class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'finance:dashboard' %}"{% if request.resolver_match.url_name == 'dashboard' %} aria-current="page"{% endif %}>
+            <span class="nav-marker" aria-hidden="true"></span>Dashboard
+        </a>
+        {% if user.is_superuser or user.role == 'admin' or user.role == 'accountant' or user.role == 'owner' %}
+            <a class="{% if request.resolver_match.namespace == 'finance' and request.resolver_match.url_name != 'dashboard' %}active{% endif %}" href="{% url 'finance:reports' %}"{% if request.resolver_match.namespace == 'finance' and request.resolver_match.url_name != 'dashboard' %} aria-current="page"{% endif %}>
+                <span class="nav-marker" aria-hidden="true"></span>Financial Reports
+            </a>
+        {% endif %}
+        <p class="sidebar-note">Secure portfolio workspace</p>
+    </nav>
 </aside>

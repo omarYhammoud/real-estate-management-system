@@ -9,12 +9,13 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     {% include 'partials/navbar.html' %}
     <div class="app-layout">
         {% if user.is_authenticated %}
             {% include 'partials/sidebar.html' %}
         {% endif %}
-        <main class="app-content">
+        <main class="app-content" id="main-content" tabindex="-1">
             {% include 'partials/messages.html' %}
             {% block content %}{% endblock %}
         </main>

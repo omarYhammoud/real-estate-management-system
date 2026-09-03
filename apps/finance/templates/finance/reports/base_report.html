@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/reports.css' %}">
+{% endblock %}
+{% block content %}
+<header class="report-header">
+    <div>
+        <a class="report-back" href="{% url 'finance:reports' %}">← All reports</a>
+        <h1>{% block report_title %}Reports{% endblock %}</h1>
+        <p>{% block report_description %}{% endblock %}</p>
+    </div>
+</header>
+{% block report_filter %}{% endblock %}
+{% block report_content %}{% endblock %}
+{% endblock %}

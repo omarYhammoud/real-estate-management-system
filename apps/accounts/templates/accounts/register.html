@@ -1,9 +1,30 @@
 {% extends 'base.html' %}
+{% load static %}
+{% block title %}Create account | Keystone RMS{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/auth.css' %}">{% endblock %}
 {% block content %}
-<h1>Register</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Create account</button>
-</form>
+<section class="auth-shell" aria-labelledby="auth-title">
+    <div class="auth-card auth-card-wide">
+        <div class="auth-heading">
+            <span class="auth-mark" aria-hidden="true">KR</span>
+            <p class="eyebrow">Tenant access</p>
+            <h1 id="auth-title">Create your account</h1>
+            <p>Register securely to access your tenant workspace.</p>
+        </div>
+        <form method="post" class="auth-form auth-form-grid">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="form-alert form-grid-wide" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+            {% for field in form %}
+                <div class="form-field{% if field.errors %} has-error{% endif %}{% if field.name == 'username' or field.name == 'password1' or field.name == 'password2' %} form-grid-wide{% endif %}">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<div class="field-help">{{ field.help_text|safe }}</div>{% endif %}
+                    {{ field.errors }}
+                </div>
+            {% endfor %}
+            <button class="button button-primary button-block form-grid-wide" type="submit">Create tenant account</button>
+        </form>
+        <p class="auth-footer">Already registered? <a href="{% url 'accounts:login' %}">Sign in</a></p>
+    </div>
+</section>
 {% endblock %}
