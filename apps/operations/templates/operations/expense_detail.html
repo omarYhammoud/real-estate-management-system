@@ -1,29 +1,96 @@
 {% extends 'base.html' %}
-{% block title %}Expense — {{ expense.expense_reference }}{% endblock %}
+{% block title %}Expense Voucher — {{ expense.expense_reference }} | Keystone RMS{% endblock %}
 
 {% block content %}
+<div class="crumb">
+    <a href="{% url 'operations:expense_list' %}" class="breadcrumb-link">Operations</a> /
+    <a href="{% url 'operations:expense_list' %}" class="breadcrumb-link">Expenses</a> /
+    <b>{{ expense.expense_reference }}</b>
+</div>
+
 <div class="page-header">
-    <h1>Expense: {{ expense.expense_reference }}</h1>
     <div>
-        <a href="{% url 'operations:expense_edit' expense.pk %}" class="btn btn-secondary">Edit</a>
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <h1>Expense Voucher: {{ expense.expense_reference }}</h1>
+            <span class="badge badge-status-{{ expense.status }}">{{ expense.get_status_display }}</span>
+        </div>
+        <p>Category: <strong>{{ expense.get_category_display }}</strong> &bull; Date: <strong>{{ expense.expense_date }}</strong></p>
+    </div>
+    <div class="actions">
+        <a href="{% url 'operations:expense_edit' expense.pk %}" class="btn btn-secondary">Edit Expense</a>
         <a href="{% url 'operations:expense_list' %}" class="btn btn-outline">← All Expenses</a>
     </div>
 </div>
 
-<div class="detail-card">
-    <div class="detail-row"><span class="label">Reference</span><span>{{ expense.expense_reference }}</span></div>
-    <div class="detail-row"><span class="label">Category</span><span>{{ expense.get_category_display }}</span></div>
-    <div class="detail-row"><span class="label">Amount</span><span>{{ expense.amount }}</span></div>
-    <div class="detail-row"><span class="label">Expense Date</span><span>{{ expense.expense_date }}</span></div>
-    <div class="detail-row"><span class="label">Status</span>
-        <span class="badge badge-status-{{ expense.status }}">{{ expense.get_status_display }}</span>
+<div class="grid-2">
+    <!-- Left Panel: Voucher & Property Details -->
+    <div class="panel">
+        <h3>Voucher Specifications <span class="muted">— Property &amp; Allocation</span></h3>
+        <div class="stat-line">
+            <span class="k">Voucher Reference</span>
+            <span class="v font-mono">{{ expense.expense_reference }}</span>
+        </div>
+        <div class="stat-line">
+            <span class="k">Expense Category</span>
+            <span class="v"><span class="badge-cat">{{ expense.get_category_display }}</span></span>
+        </div>
+        <div class="stat-line">
+            <span class="k">Assigned Property</span>
+            <span class="v">{{ expense.property.name|default:"General Operating / Portfolio" }}</span>
+        </div>
+        <div class="stat-line">
+            <span class="k">Assigned Unit</span>
+            <span class="v">{{ expense.unit|default:"—" }}</span>
+        </div>
+        <div class="stat-line">
+            <span class="k">Effective Date</span>
+            <span class="v font-mono">{{ expense.expense_date }}</span>
+        </div>
+        <div class="stat-line">
+            <span class="k">Recorded By</span>
+            <span class="v">
+                {% if expense.recorded_by %}
+                    <span class="badge-cat">{{ expense.recorded_by.username }}</span>
+                {% else %}
+                    <span class="muted">—</span>
+                {% endif %}
+            </span>
+        </div>
     </div>
-    <div class="detail-row"><span class="label">Property</span><span>{{ expense.property.name|default:"—" }}</span></div>
-    <div class="detail-row"><span class="label">Unit</span><span>{{ expense.unit|default:"—" }}</span></div>
-    <div class="detail-row"><span class="label">Recorded By</span><span>{{ expense.recorded_by|default:"—" }}</span></div>
-    <div class="detail-row"><span class="label">Description</span></div>
-    <div class="issue-text">{{ expense.description|default:"No description provided." }}</div>
-    <div class="detail-row"><span class="label">Recorded At</span><span>{{ expense.created_at|date:"Y-m-d H:i" }}</span></div>
-    <div class="detail-row"><span class="label">Last Updated</span><span>{{ expense.updated_at|date:"Y-m-d H:i" }}</span></div>
+
+    <!-- Right Panel: Financial Accounting & Status -->
+    <div class="panel">
+        <h3>Accounting &amp; Payment Status <span class="muted">— Financial Ledger</span></h3>
+        
+        <div class="stat-line">
+            <span class="k">Voucher Total Amount</span>
+            <span class="v font-mono" style="font-size: 18px; color: var(--accent-deep);">
+                ${{ expense.amount }}
+            </span>
+        </div>
+        <div class="stat-line">
+            <span class="k">Payment / Approval Status</span>
+            <span class="v"><span class="badge badge-status-{{ expense.status }}">{{ expense.get_status_display }}</span></span>
+        </div>
+        <div class="stat-line">
+            <span class="k">Logged Timestamp</span>
+            <span class="v font-mono">{{ expense.created_at|date:"M d, Y H:i" }}</span>
+        </div>
+        <div class="stat-line">
+            <span class="k">Last Modified</span>
+            <span class="v font-mono">{{ expense.updated_at|date:"M d, Y H:i" }}</span>
+        </div>
+
+        <div style="margin-top: 18px; padding: 12px 14px; background: var(--panel-alt); border: 1px solid var(--line-soft); border-radius: var(--radius-sm); font-size: 12.5px;">
+            <span class="muted font-mono" style="font-size: 10.5px; text-transform: uppercase;">STATUS NOTICE:</span><br>
+            This operational expense is currently in <strong>{{ expense.get_status_display }}</strong> status.
+        </div>
+    </div>
+</div>
+
+<!-- Description Panel -->
+<div class="panel">
+    <h3>Description &amp; Line Item Notes</h3>
+    <div class="issue-text" style="white-space: pre-wrap; font-size: 13.2px;">{{ expense.description|default:"No additional notes or description provided for this expense voucher." }}</div>
 </div>
 {% endblock %}

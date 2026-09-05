@@ -1,9 +1,37 @@
 {% extends 'base.html' %}
+{% block title %}Sign In — RealEstate OS{% endblock %}
+
 {% block content %}
-<h1>Login</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Log in</button>
-</form>
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo-badge">🏢</div>
+            <h1>Welcome Back</h1>
+            <p>Sign in to your Real Estate Management account</p>
+        </div>
+
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                <ul class="form-errors">
+                    {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            {% if form.non_field_errors %}
+            <ul class="form-errors" style="margin-bottom: 12px;">
+                {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+            {% endif %}
+
+            <button type="submit" class="btn btn-primary">Sign In to Dashboard</button>
+        </form>
+    </div>
+</div>
 {% endblock %}

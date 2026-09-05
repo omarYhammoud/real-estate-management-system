@@ -1,14 +1,25 @@
 <nav class="navbar">
-    <a class="navbar-brand" href="{% url 'finance:dashboard' %}">Real Estate MS</a>
+    <a class="navbar-brand" href="{% url 'finance:dashboard' %}">
+        <span class="navbar-brand-logo">RE</span>
+        <span>Keystone RMS</span>
+    </a>
     <ul class="navbar-links">
-        <li><a href="{% url 'properties:property_list' %}">Properties</a></li>
-        <li><a href="{% url 'billing:invoice_list' %}">Invoices</a></li>
-        <li><a href="{% url 'operations:maintenance_list' %}">Maintenance</a></li>
-        <li><a href="{% url 'finance:dashboard' %}">Dashboard</a></li>
+        <li><a href="{% url 'properties:property_list' %}" class="{% if 'properties' in request.resolver_match.app_names or 'property' in request.path %}active{% endif %}">Properties</a></li>
+        <li><a href="{% url 'billing:invoice_list' %}" class="{% if 'billing' in request.resolver_match.app_names or 'invoice' in request.path %}active{% endif %}">Invoices</a></li>
+        <li><a href="{% url 'operations:deposit_list' %}" class="{% if 'deposit' in request.path %}active{% endif %}">Deposits</a></li>
+        <li><a href="{% url 'operations:maintenance_list' %}" class="{% if 'maintenance' in request.path %}active{% endif %}">Maintenance</a></li>
+        <li><a href="{% url 'operations:expense_list' %}" class="{% if 'expense' in request.path %}active{% endif %}">Expenses</a></li>
+        <li><a href="{% url 'finance:dashboard' %}" class="{% if 'finance' in request.resolver_match.app_names or 'dashboard' in request.path %}active{% endif %}">Dashboard</a></li>
         {% if user.is_authenticated %}
-            <li><a href="{% url 'accounts:logout' %}">Logout ({{ user }})</a></li>
+            <li>
+                <span class="navbar-user-pill">
+                    <span class="navbar-user-avatar">{{ user.username|first|upper }}</span>
+                    <span>{{ user.username }}</span>
+                </span>
+            </li>
+            <li><a href="{% url 'accounts:logout' %}" style="color: #E2B0A6;">Logout</a></li>
         {% else %}
-            <li><a href="{% url 'accounts:login' %}">Login</a></li>
+            <li><a href="{% url 'accounts:login' %}" class="btn btn-primary" style="padding: 6px 14px; font-size: 0.825rem;">Login</a></li>
         {% endif %}
     </ul>
 </nav>

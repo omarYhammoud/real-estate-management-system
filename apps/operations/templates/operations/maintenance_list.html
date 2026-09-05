@@ -1,39 +1,55 @@
 {% extends 'base.html' %}
-{% block title %}Maintenance Requests — RealEstate OS{% endblock %}
+{% block title %}Maintenance Requests — Keystone RMS{% endblock %}
 
 {% block content %}
+<div class="crumb">Operations / <b>Maintenance</b></div>
+
 <div class="page-header">
     <div>
-        <h1>Maintenance Requests</h1>
-        <p style="color: var(--slate-500); font-size: 0.9rem; margin-top: 4px;">Track maintenance tasks, repairs, and contractor costs.</p>
+        <h1>Maintenance &amp; Work Orders</h1>
+        <p>Portfolio repair requests, contractor service jobs, and property maintenance cost tracking.</p>
     </div>
-    <a href="{% url 'operations:maintenance_create' %}" class="btn btn-primary">+ New Request</a>
+    <div class="actions">
+        <a href="{% url 'operations:maintenance_create' %}" class="btn btn-primary">+ New Request</a>
+    </div>
 </div>
 
-<!-- Filters -->
+<!-- Filter Bar -->
 <form method="get" class="filter-bar">
-    <select name="status" id="filter-status">
-        <option value="">All Statuses</option>
-        {% for val, label in status_choices %}
-        <option value="{{ val }}" {% if current_status == val %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-    </select>
-    <select name="priority" id="filter-priority">
-        <option value="">All Priorities</option>
-        {% for val, label in priority_choices %}
-        <option value="{{ val }}" {% if current_priority == val %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-    </select>
-    <button type="submit" class="btn btn-secondary">Filter</button>
-    <a href="{% url 'operations:maintenance_list' %}" class="btn btn-outline">Clear</a>
+    <div class="field">
+        <label for="filter-status">Status</label>
+        <select name="status" id="filter-status">
+            <option value="">All Statuses</option>
+            {% for val, label in status_choices %}
+            <option value="{{ val }}" {% if current_status == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="field">
+        <label for="filter-priority">Priority</label>
+        <select name="priority" id="filter-priority">
+            <option value="">All Priorities</option>
+            {% for val, label in priority_choices %}
+            <option value="{{ val }}" {% if current_priority == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="field" style="flex-direction: row; align-items: flex-end; gap: 8px; margin-top: auto;">
+        <button type="submit" class="btn btn-secondary btn-small">Apply Filters</button>
+        {% if current_status or current_priority %}
+        <a href="{% url 'operations:maintenance_list' %}" class="btn btn-outline btn-small">Clear</a>
+        {% endif %}
+    </div>
 </form>
 
 <div class="table-card">
     <table class="table">
         <thead>
             <tr>
-                <th>Property</th>
-                <th>Unit</th>
+                <th>Property &amp; Unit</th>
+                <th>Issue Summary</th>
                 <th>Tenant</th>
                 <th>Priority</th>
                 <th>Status</th>
@@ -45,34 +61,71 @@
         <tbody>
             {% for r in requests %}
             <tr>
-                <td><strong>{{ r.property.name }}</strong></td>
-                <td>{{ r.unit|default:"—" }}</td>
-                <td>{{ r.tenant|default:"—" }}</td>
-                <td><span class="badge badge-priority-{{ r.priority }}">{{ r.get_priority_display }}</span></td>
-                <td><span class="badge badge-status-{{ r.status }}">{{ r.get_status_display }}</span></td>
-                <td>{{ r.request_date }}</td>
-                <td>{% if r.cost %}${{ r.cost }}{% else %}—{% endif %}</td>
+                <td>
+                    <a href="{% url 'operations:maintenance_detail' r.pk %}" style="font-weight: 600; color: var(--ink);">
+                        {{ r.property.name }}
+                    </a>
+                    <div class="cell-sub">
+                        {% if r.unit %}Unit {{ r.unit.unit_number }}{% else %}Common Area / Building{% endif %}
+                    </div>
+                </td>
+                <td>
+                    <span title="{{ r.issue }}">{{ r.issue|truncatewords:8 }}</span>
+                </td>
+                <td>{{ r.tenant.full_name|default:"—" }}</td>
+                <td>
+                    <span class="badge badge-priority-{{ r.priority }}">{{ r.get_priority_display }}</span>
+                </td>
+                <td>
+                    <span class="badge badge-status-{{ r.status }}">{{ r.get_status_display }}</span>
+                </td>
+                <td class="font-mono">{{ r.request_date }}</td>
+                <td class="money">
+                    {% if r.cost %}
+                        <strong style="color: var(--ink);">${{ r.cost }}</strong>
+                    {% else %}
+                        <span class="muted">— pending</span>
+                    {% endif %}
+                </td>
                 <td style="text-align: right;">
-                    <a href="{% url 'operations:maintenance_detail' r.pk %}" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;">View</a>
-                    <a href="{% url 'operations:maintenance_edit' r.pk %}" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem;">Edit</a>
+                    <div class="actions" style="justify-content: flex-end;">
+                        <a href="{% url 'operations:maintenance_detail' r.pk %}" class="btn btn-secondary btn-small">View</a>
+                        <a href="{% url 'operations:maintenance_edit' r.pk %}" class="btn btn-outline btn-small">Edit</a>
+                    </div>
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="8" style="text-align: center; padding: 36px; color: var(--slate-400);">
-                    No maintenance requests found matching filters.
+                <td colspan="8">
+                    <div class="empty-state">
+                        <div class="glyph">🛠️</div>
+                        <div class="t">No Maintenance Requests Found</div>
+                        <p class="sub">{% if current_status or current_priority %}No requests match the selected filters.{% else %}There are no maintenance service requests recorded in the system.{% endif %}</p>
+                        <div style="margin-top: 14px;">
+                            <a href="{% url 'operations:maintenance_create' %}" class="btn btn-primary btn-small">+ Create First Request</a>
+                        </div>
+                    </div>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    {% if requests %}
+    <div class="table-toolbar-note">
+        Showing {{ requests|length }} maintenance request{{ requests|length|pluralize }}
+    </div>
+    {% endif %}
 </div>
 
 {% if is_paginated %}
 <div class="pagination">
-    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}&status={{ current_status }}&priority={{ current_priority }}">Previous</a>{% endif %}
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}&status={{ current_status }}&priority={{ current_priority }}">← Previous</a>
+    {% endif %}
     <span>Page {{ page_obj.number }} of {{ page_obj.num_pages }}</span>
-    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}&status={{ current_status }}&priority={{ current_priority }}">Next</a>{% endif %}
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}&status={{ current_status }}&priority={{ current_priority }}">Next →</a>
+    {% endif %}
 </div>
 {% endif %}
 {% endblock %}

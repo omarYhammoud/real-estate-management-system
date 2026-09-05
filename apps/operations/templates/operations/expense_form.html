@@ -1,37 +1,151 @@
 {% extends 'base.html' %}
-{% block title %}{% if object %}Edit Expense{% else %}Record New Expense{% endif %}{% endblock %}
+{% block title %}{% if object %}Edit Expense — {{ object.expense_reference }}{% else %}Record New Expense{% endif %} | Keystone RMS{% endblock %}
 
 {% block content %}
+<div class="crumb">
+    <a href="{% url 'operations:expense_list' %}" class="breadcrumb-link">Operations</a> /
+    <a href="{% url 'operations:expense_list' %}" class="breadcrumb-link">Expenses</a> /
+    <b>{% if object %}Edit {{ object.expense_reference }}{% else %}New Expense{% endif %}</b>
+</div>
+
 <div class="page-header">
-    <h1>{% if object %}Edit Expense: {{ object.expense_reference }}{% else %}Record New Expense{% endif %}</h1>
-    <a href="{% url 'operations:expense_list' %}" class="btn btn-outline">← Back to List</a>
+    <div>
+        <h1>{% if object %}Edit Expense Voucher{% else %}Record Operational Expense{% endif %}</h1>
+        <p>{% if object %}Modify expense details, status, or allocations for voucher {{ object.expense_reference }}.{% else %}Log a new operating expense, maintenance cost, or utility bill in the portfolio ledger.{% endif %}</p>
+    </div>
+    <div class="actions">
+        {% if object %}
+        <a href="{% url 'operations:expense_detail' object.pk %}" class="btn btn-outline">← Back to Voucher</a>
+        {% else %}
+        <a href="{% url 'operations:expense_list' %}" class="btn btn-outline">← Back to List</a>
+        {% endif %}
+    </div>
 </div>
 
 <div class="form-card">
-    <form method="post">
+    <div style="margin-bottom: 20px;">
+        <h3>Voucher Parameters <span class="muted">— Financial amounts &amp; property allocation</span></h3>
+    </div>
+
+    <form method="post" novalidate>
         {% csrf_token %}
-        {% for field in form %}
-        <div class="form-group">
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-            {{ field }}
-            {% if field.errors %}
-            <ul class="form-errors">
-                {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
-            </ul>
-            {% endif %}
-            {% if field.help_text %}<small class="help-text">{{ field.help_text }}</small>{% endif %}
-        </div>
-        {% endfor %}
+
         {% if form.non_field_errors %}
-        <ul class="form-errors">
+        <ul class="form-errors" style="margin-bottom: 18px;">
             {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
         </ul>
         {% endif %}
+
+        <div class="form-grid">
+            <div class="form-field">
+                <label for="{{ form.expense_reference.id_for_label }}">Expense Reference #</label>
+                {{ form.expense_reference }}
+                {% if form.expense_reference.errors %}
+                <ul class="form-errors">
+                    {% for error in form.expense_reference.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.expense_reference.help_text %}<span class="hint">{{ form.expense_reference.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.category.id_for_label }}">Category</label>
+                {{ form.category }}
+                {% if form.category.errors %}
+                <ul class="form-errors">
+                    {% for error in form.category.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.category.help_text %}<span class="hint">{{ form.category.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.amount.id_for_label }}">Amount ($)</label>
+                {{ form.amount }}
+                {% if form.amount.errors %}
+                <ul class="form-errors">
+                    {% for error in form.amount.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.amount.help_text %}<span class="hint">{{ form.amount.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.expense_date.id_for_label }}">Expense Date</label>
+                {{ form.expense_date }}
+                {% if form.expense_date.errors %}
+                <ul class="form-errors">
+                    {% for error in form.expense_date.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.expense_date.help_text %}<span class="hint">{{ form.expense_date.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.property.id_for_label }}">Assigned Property (Optional)</label>
+                {{ form.property }}
+                {% if form.property.errors %}
+                <ul class="form-errors">
+                    {% for error in form.property.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.property.help_text %}<span class="hint">{{ form.property.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.unit.id_for_label }}">Assigned Unit (Optional)</label>
+                {{ form.unit }}
+                {% if form.unit.errors %}
+                <ul class="form-errors">
+                    {% for error in form.unit.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.unit.help_text %}<span class="hint">{{ form.unit.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.recorded_by.id_for_label }}">Recorded By</label>
+                {{ form.recorded_by }}
+                {% if form.recorded_by.errors %}
+                <ul class="form-errors">
+                    {% for error in form.recorded_by.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.recorded_by.help_text %}<span class="hint">{{ form.recorded_by.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.status.id_for_label }}">Status</label>
+                {{ form.status }}
+                {% if form.status.errors %}
+                <ul class="form-errors">
+                    {% for error in form.status.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.status.help_text %}<span class="hint">{{ form.status.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field span-2">
+                <label for="{{ form.description.id_for_label }}">Description / Purpose / Vendor Notes</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                <ul class="form-errors">
+                    {% for error in form.description.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.description.help_text %}<span class="hint">{{ form.description.help_text }}</span>{% endif %}
+            </div>
+        </div>
+
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary">
-                {% if object %}Save Changes{% else %}Record Expense{% endif %}
-            </button>
+            {% if object %}
+            <a href="{% url 'operations:expense_detail' object.pk %}" class="btn btn-outline">Cancel</a>
+            {% else %}
             <a href="{% url 'operations:expense_list' %}" class="btn btn-outline">Cancel</a>
+            {% endif %}
+            <button type="submit" class="btn btn-primary">
+                {% if object %}Save Expense Changes{% else %}Record Expense Entry{% endif %}
+            </button>
         </div>
     </form>
 </div>

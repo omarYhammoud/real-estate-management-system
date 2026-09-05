@@ -3,19 +3,19 @@
         <h4>Operations</h4>
         <ul class="sidebar-nav-list">
             <li>
-                <a href="{% url 'operations:deposit_list' %}">
+                <a href="{% url 'operations:deposit_list' %}" class="{% if 'deposit' in request.path %}active{% endif %}">
                     <span class="sidebar-icon">🔒</span>
                     <span>Security Deposits</span>
                 </a>
             </li>
             <li>
-                <a href="{% url 'operations:maintenance_list' %}">
+                <a href="{% url 'operations:maintenance_list' %}" class="{% if 'maintenance' in request.path %}active{% endif %}">
                     <span class="sidebar-icon">🛠️</span>
                     <span>Maintenance</span>
                 </a>
             </li>
             <li>
-                <a href="{% url 'operations:expense_list' %}">
+                <a href="{% url 'operations:expense_list' %}" class="{% if 'expense' in request.path %}active{% endif %}">
                     <span class="sidebar-icon">🧾</span>
                     <span>Expenses</span>
                 </a>
@@ -27,19 +27,19 @@
         <h4>Management</h4>
         <ul class="sidebar-nav-list">
             <li>
-                <a href="{% url 'properties:property_list' %}">
+                <a href="{% url 'properties:property_list' %}" class="{% if 'property' in request.path %}active{% endif %}">
                     <span class="sidebar-icon">🏠</span>
                     <span>Properties</span>
                 </a>
             </li>
             <li>
-                <a href="{% url 'billing:invoice_list' %}">
+                <a href="{% url 'billing:invoice_list' %}" class="{% if 'invoice' in request.path %}active{% endif %}">
                     <span class="sidebar-icon">📄</span>
                     <span>Billing & Invoices</span>
                 </a>
             </li>
             <li>
-                <a href="{% url 'finance:dashboard' %}">
+                <a href="{% url 'finance:dashboard' %}" class="{% if 'dashboard' in request.path %}active{% endif %}">
                     <span class="sidebar-icon">📊</span>
                     <span>Dashboard</span>
                 </a>

@@ -1,37 +1,107 @@
 {% extends 'base.html' %}
-{% block title %}{% if object %}Edit Deposit{% else %}New Security Deposit{% endif %}{% endblock %}
+{% block title %}{% if object %}Edit Deposit — {{ object.contract.contract_reference }}{% else %}New Security Deposit{% endif %} | Keystone RMS{% endblock %}
 
 {% block content %}
+<div class="crumb">
+    <a href="{% url 'operations:deposit_list' %}" class="breadcrumb-link">Operations</a> /
+    <a href="{% url 'operations:deposit_list' %}" class="breadcrumb-link">Security Deposits</a> /
+    <b>{% if object %}Edit #{{ object.pk }}{% else %}New Deposit{% endif %}</b>
+</div>
+
 <div class="page-header">
-    <h1>{% if object %}Edit Security Deposit{% else %}New Security Deposit{% endif %}</h1>
-    <a href="{% url 'operations:deposit_list' %}" class="btn btn-outline">← Back to List</a>
+    <div>
+        <h1>{% if object %}Edit Security Deposit{% else %}Record Security Deposit{% endif %}</h1>
+        <p>{% if object %}Update terms and escrow amounts for {{ object.contract.contract_reference }}.{% else %}Register a new tenant security deposit against a rental contract.{% endif %}</p>
+    </div>
+    <div class="actions">
+        {% if object %}
+        <a href="{% url 'operations:deposit_detail' object.pk %}" class="btn btn-outline">← Back to Ledger</a>
+        {% else %}
+        <a href="{% url 'operations:deposit_list' %}" class="btn btn-outline">← Back to List</a>
+        {% endif %}
+    </div>
 </div>
 
 <div class="form-card">
-    <form method="post">
+    <div style="margin-bottom: 20px;">
+        <h3>Escrow Parameters <span class="muted">— Contract terms &amp; received amounts</span></h3>
+    </div>
+
+    <form method="post" novalidate>
         {% csrf_token %}
-        {% for field in form %}
-        <div class="form-group">
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-            {{ field }}
-            {% if field.errors %}
-            <ul class="form-errors">
-                {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
-            </ul>
-            {% endif %}
-            {% if field.help_text %}<small class="help-text">{{ field.help_text }}</small>{% endif %}
-        </div>
-        {% endfor %}
+
         {% if form.non_field_errors %}
-        <ul class="form-errors">
+        <ul class="form-errors" style="margin-bottom: 18px;">
             {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
         </ul>
         {% endif %}
+
+        <div class="form-grid">
+            <div class="form-field span-2">
+                <label for="{{ form.contract.id_for_label }}">Rental Contract</label>
+                {{ form.contract }}
+                {% if form.contract.errors %}
+                <ul class="form-errors">
+                    {% for error in form.contract.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.contract.help_text %}<span class="hint">{{ form.contract.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.required_amount.id_for_label }}">Required Amount ($)</label>
+                {{ form.required_amount }}
+                {% if form.required_amount.errors %}
+                <ul class="form-errors">
+                    {% for error in form.required_amount.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.required_amount.help_text %}<span class="hint">{{ form.required_amount.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.received_amount.id_for_label }}">Received Amount ($)</label>
+                {{ form.received_amount }}
+                {% if form.received_amount.errors %}
+                <ul class="form-errors">
+                    {% for error in form.received_amount.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.received_amount.help_text %}<span class="hint">{{ form.received_amount.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.received_date.id_for_label }}">Date Received</label>
+                {{ form.received_date }}
+                {% if form.received_date.errors %}
+                <ul class="form-errors">
+                    {% for error in form.received_date.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.received_date.help_text %}<span class="hint">{{ form.received_date.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.status.id_for_label }}">Escrow Status</label>
+                {{ form.status }}
+                {% if form.status.errors %}
+                <ul class="form-errors">
+                    {% for error in form.status.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.status.help_text %}<span class="hint">{{ form.status.help_text }}</span>{% endif %}
+            </div>
+        </div>
+
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary">
-                {% if object %}Save Changes{% else %}Create Deposit{% endif %}
-            </button>
+            {% if object %}
+            <a href="{% url 'operations:deposit_detail' object.pk %}" class="btn btn-outline">Cancel</a>
+            {% else %}
             <a href="{% url 'operations:deposit_list' %}" class="btn btn-outline">Cancel</a>
+            {% endif %}
+            <button type="submit" class="btn btn-primary">
+                {% if object %}Save Deposit Changes{% else %}Record Deposit{% endif %}
+            </button>
         </div>
     </form>
 </div>

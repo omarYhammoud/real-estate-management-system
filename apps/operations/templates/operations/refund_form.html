@@ -1,39 +1,113 @@
 {% extends 'base.html' %}
-{% block title %}Add Refund — {{ deposit.contract.contract_reference }}{% endblock %}
+{% block title %}Process Refund — {{ deposit.contract.contract_reference }} | Keystone RMS{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1>Add Refund</h1>
-    <a href="{% url 'operations:deposit_detail' deposit.pk %}" class="btn btn-outline">← Back to Deposit</a>
+<div class="crumb">
+    <a href="{% url 'operations:deposit_list' %}" class="breadcrumb-link">Operations</a> /
+    <a href="{% url 'operations:deposit_detail' deposit.pk %}" class="breadcrumb-link">{{ deposit.contract.contract_reference }}</a> /
+    <b>Process Refund</b>
 </div>
 
+<div class="page-header">
+    <div>
+        <h1>Process Deposit Refund</h1>
+        <p>Record a disbursement returning security deposit funds back to the tenant.</p>
+    </div>
+    <div class="actions">
+        <a href="{% url 'operations:deposit_detail' deposit.pk %}" class="btn btn-outline">← Back to Ledger</a>
+    </div>
+</div>
+
+<!-- Helpful Context Banner -->
 <div class="info-callout">
-    <strong>Deposit:</strong> {{ deposit.contract.contract_reference }} &nbsp;|&nbsp;
-    <strong>Available Balance:</strong> {{ deposit.remaining_balance }}
+    <div>
+        <span class="muted">CONTRACT:</span> <strong>{{ deposit.contract.contract_reference }}</strong>
+    </div>
+    <span class="muted">&bull;</span>
+    <div>
+        <span class="muted">TENANT:</span> <strong>{{ deposit.contract.tenant.full_name }}</strong>
+    </div>
+    <span class="muted">&bull;</span>
+    <div>
+        <span class="muted">MAXIMUM REFUNDABLE AMOUNT:</span>
+        <strong style="color: var(--status-ok); font-size: 14px;">${{ deposit.remaining_balance }}</strong>
+    </div>
 </div>
 
 <div class="form-card">
-    <form method="post">
+    <div style="margin-bottom: 20px;">
+        <h3>Refund Disbursement Entry <span class="muted">— Issue payment against available balance</span></h3>
+    </div>
+
+    <form method="post" novalidate>
         {% csrf_token %}
-        {% for field in form %}
-        <div class="form-group">
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-            {{ field }}
-            {% if field.errors %}
-            <ul class="form-errors">
-                {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
-            </ul>
-            {% endif %}
-        </div>
-        {% endfor %}
+
         {% if form.non_field_errors %}
-        <ul class="form-errors">
+        <ul class="form-errors" style="margin-bottom: 18px;">
             {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
         </ul>
         {% endif %}
+
+        <div class="form-grid">
+            <div class="form-field">
+                <label for="{{ form.amount.id_for_label }}">Refund Amount ($)</label>
+                {{ form.amount }}
+                {% if form.amount.errors %}
+                <ul class="form-errors">
+                    {% for error in form.amount.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.amount.help_text %}<span class="hint">{{ form.amount.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.refund_date.id_for_label }}">Refund Date</label>
+                {{ form.refund_date }}
+                {% if form.refund_date.errors %}
+                <ul class="form-errors">
+                    {% for error in form.refund_date.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.refund_date.help_text %}<span class="hint">{{ form.refund_date.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.refund_method.id_for_label }}">Refund Method</label>
+                {{ form.refund_method }}
+                {% if form.refund_method.errors %}
+                <ul class="form-errors">
+                    {% for error in form.refund_method.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.refund_method.help_text %}<span class="hint">{{ form.refund_method.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.refund_reference.id_for_label }}">Refund Reference #</label>
+                {{ form.refund_reference }}
+                {% if form.refund_reference.errors %}
+                <ul class="form-errors">
+                    {% for error in form.refund_reference.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.refund_reference.help_text %}<span class="hint">{{ form.refund_reference.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field span-2">
+                <label for="{{ form.authorized_by.id_for_label }}">Authorized By</label>
+                {{ form.authorized_by }}
+                {% if form.authorized_by.errors %}
+                <ul class="form-errors">
+                    {% for error in form.authorized_by.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.authorized_by.help_text %}<span class="hint">{{ form.authorized_by.help_text }}</span>{% endif %}
+            </div>
+        </div>
+
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Record Refund</button>
             <a href="{% url 'operations:deposit_detail' deposit.pk %}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary">Confirm &amp; Record Refund</button>
         </div>
     </form>
 </div>

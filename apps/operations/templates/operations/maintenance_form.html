@@ -1,37 +1,140 @@
 {% extends 'base.html' %}
-{% block title %}{% if object %}Edit Maintenance Request{% else %}New Maintenance Request{% endif %}{% endblock %}
+{% block title %}{% if object %}Edit Maintenance Request #{{ object.pk }}{% else %}New Maintenance Request{% endif %} | Keystone RMS{% endblock %}
 
 {% block content %}
+<div class="crumb">
+    <a href="{% url 'operations:maintenance_list' %}" class="breadcrumb-link">Operations</a> /
+    <a href="{% url 'operations:maintenance_list' %}" class="breadcrumb-link">Maintenance</a> /
+    <b>{% if object %}Edit #{{ object.pk }}{% else %}New Request{% endif %}</b>
+</div>
+
 <div class="page-header">
-    <h1>{% if object %}Edit Maintenance Request{% else %}New Maintenance Request{% endif %}</h1>
-    <a href="{% url 'operations:maintenance_list' %}" class="btn btn-outline">← Back to List</a>
+    <div>
+        <h1>{% if object %}Edit Maintenance Request #{{ object.pk }}{% else %}New Maintenance Request{% endif %}</h1>
+        <p>{% if object %}Update request status, contractor cost estimates, or job specifications.{% else %}Record a new repair ticket or scheduled maintenance service.{% endif %}</p>
+    </div>
+    <div class="actions">
+        {% if object %}
+        <a href="{% url 'operations:maintenance_detail' object.pk %}" class="btn btn-outline">← Back to Request</a>
+        {% else %}
+        <a href="{% url 'operations:maintenance_list' %}" class="btn btn-outline">← Back to List</a>
+        {% endif %}
+    </div>
 </div>
 
 <div class="form-card">
-    <form method="post">
+    <div style="margin-bottom: 20px;">
+        <h3>Work Order Specifications <span class="muted">— Property location &amp; issue scope</span></h3>
+    </div>
+
+    <form method="post" novalidate>
         {% csrf_token %}
-        {% for field in form %}
-        <div class="form-group">
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-            {{ field }}
-            {% if field.errors %}
-            <ul class="form-errors">
-                {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
-            </ul>
-            {% endif %}
-            {% if field.help_text %}<small class="help-text">{{ field.help_text }}</small>{% endif %}
-        </div>
-        {% endfor %}
+
         {% if form.non_field_errors %}
-        <ul class="form-errors">
+        <ul class="form-errors" style="margin-bottom: 18px;">
             {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
         </ul>
         {% endif %}
+
+        <div class="form-grid">
+            <div class="form-field">
+                <label for="{{ form.property.id_for_label }}">Property</label>
+                {{ form.property }}
+                {% if form.property.errors %}
+                <ul class="form-errors">
+                    {% for error in form.property.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.property.help_text %}<span class="hint">{{ form.property.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.unit.id_for_label }}">Unit (Optional)</label>
+                {{ form.unit }}
+                {% if form.unit.errors %}
+                <ul class="form-errors">
+                    {% for error in form.unit.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.unit.help_text %}<span class="hint">{{ form.unit.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.tenant.id_for_label }}">Tenant / Reported By</label>
+                {{ form.tenant }}
+                {% if form.tenant.errors %}
+                <ul class="form-errors">
+                    {% for error in form.tenant.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.tenant.help_text %}<span class="hint">{{ form.tenant.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.request_date.id_for_label }}">Request Date</label>
+                {{ form.request_date }}
+                {% if form.request_date.errors %}
+                <ul class="form-errors">
+                    {% for error in form.request_date.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.request_date.help_text %}<span class="hint">{{ form.request_date.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.priority.id_for_label }}">Priority</label>
+                {{ form.priority }}
+                {% if form.priority.errors %}
+                <ul class="form-errors">
+                    {% for error in form.priority.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.priority.help_text %}<span class="hint">{{ form.priority.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field">
+                <label for="{{ form.status.id_for_label }}">Status</label>
+                {{ form.status }}
+                {% if form.status.errors %}
+                <ul class="form-errors">
+                    {% for error in form.status.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.status.help_text %}<span class="hint">{{ form.status.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field span-2">
+                <label for="{{ form.cost.id_for_label }}">Estimated / Incurred Cost ($)</label>
+                {{ form.cost }}
+                {% if form.cost.errors %}
+                <ul class="form-errors">
+                    {% for error in form.cost.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.cost.help_text %}<span class="hint">{{ form.cost.help_text }}</span>{% endif %}
+            </div>
+
+            <div class="form-field span-2">
+                <label for="{{ form.issue.id_for_label }}">Issue Description / Service Details</label>
+                {{ form.issue }}
+                {% if form.issue.errors %}
+                <ul class="form-errors">
+                    {% for error in form.issue.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if form.issue.help_text %}<span class="hint">{{ form.issue.help_text }}</span>{% endif %}
+            </div>
+        </div>
+
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary">
-                {% if object %}Save Changes{% else %}Create Request{% endif %}
-            </button>
+            {% if object %}
+            <a href="{% url 'operations:maintenance_detail' object.pk %}" class="btn btn-outline">Cancel</a>
+            {% else %}
             <a href="{% url 'operations:maintenance_list' %}" class="btn btn-outline">Cancel</a>
+            {% endif %}
+            <button type="submit" class="btn btn-primary">
+                {% if object %}Save Request Changes{% else %}Create Maintenance Request{% endif %}
+            </button>
         </div>
     </form>
 </div>
