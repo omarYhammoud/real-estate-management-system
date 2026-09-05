@@ -1430,3 +1430,35 @@ a:hover {
         gap: 8px;
     }
 }
+
+/* ==========================================================================
+   Teammate / Auth / Reports / Core UI Utility Classes
+   ========================================================================== */
+.eyebrow { color: var(--accent-deep); font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.button { display: inline-flex; min-height: 38px; padding: 8px 15px; align-items: center; justify-content: center; color: var(--ink); background: var(--panel); border: 1px solid var(--ink); border-radius: 3px; font-weight: 700; line-height: 1.2; text-decoration: none; cursor: pointer; }
+.button:hover { color: #fff; background: var(--ink); }
+.button-primary { color: #fff; background: var(--accent); border-color: var(--accent-deep); }
+.button-primary:hover { background: var(--accent-deep); }
+.button-quiet { min-height: 34px; background: transparent; }
+.button-on-dark { color: #dce6d6; border-color: rgba(220,230,214,.36); }
+.button-on-dark:hover { color: #fff; background: rgba(255,255,255,.08); }
+.button-block { width: 100%; }
+.brand-mark { display: grid; width: 36px; height: 36px; color: #d88b59; background: rgba(168,93,46,.12); border: 1px solid #bd7041; border-radius: 3px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; place-items: center; transform: rotate(-2deg); }
+.user-summary { display: flex; margin-left: 8px; padding-left: 14px; align-items: center; gap: 9px; border-left: 1px solid rgba(220,230,214,.18); }
+.user-summary strong { display: block; max-width: 150px; overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.user-summary small { display: block; color: #95aa91; font-family: var(--font-mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
+.user-avatar { display: grid; width: 30px; height: 30px; color: #e5a47a; background: rgba(168,93,46,.14); border: 1px solid #bd7041; border-radius: 50%; font-family: var(--font-mono); font-size: 11px; font-weight: 700; place-items: center; }
+.field-help { margin-top: 6px; color: var(--ink-faint); font-size: 11px; }
+.field-help ul { margin: 5px 0 0; padding-left: 18px; }
+.errorlist { margin: 6px 0 0; padding: 0; color: var(--status-bad, #8b3327); font-size: 12px; list-style: none; }
+.form-alert { padding: 11px 13px; color: var(--status-bad, #8b3327); background: var(--status-bad-bg, #f5e7e3); border-left: 3px solid var(--status-bad, #8b3327); }
+.has-error input, .has-error select { border-color: var(--status-bad, #8b3327); }
+.badge-success { color: var(--status-ok, #2f6b4a); background: var(--status-ok-bg, #e7f1e9); }
+.badge-warning { color: var(--status-warn, #93650e); background: var(--status-warn-bg, #f5eedc); }
+.badge-danger { color: var(--status-bad, #8b3327); background: var(--status-bad-bg, #f5e7e3); }
+.badge-neutral { color: var(--status-neutral, #4b5a54); background: var(--status-neutral-bg, #e9ece7); }
+.skip-link { position: fixed; top: 8px; left: 8px; z-index: 100; padding: 9px 13px; color: #fff; background: var(--sidebar-bg, #16241c); border-radius: var(--radius); transform: translateY(-150%); }
+.skip-link:focus { transform: translateY(0); }
+.nav-marker { width: 7px; height: 7px; flex: 0 0 7px; border: 1px solid #82947c; transform: rotate(45deg); display: inline-block; }
+.sidebar a.active .nav-marker { background: #c87745; border-color: #c87745; }
+

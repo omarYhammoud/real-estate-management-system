@@ -1,0 +1,7 @@
+<form class="report-filter" method="get">
+    {{ filter_form.as_p }}
+    <div class="filter-actions">
+        <button type="submit">Apply filters</button>
+        <a href="{{ request.path }}">Clear</a>
+    </div>
+</form>

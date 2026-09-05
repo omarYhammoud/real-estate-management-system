@@ -1,5 +1,118 @@
 {% extends 'base.html' %}
+{% load humanize static %}
+
+{% block title %}Dashboard | Real Estate Management System{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
 {% block content %}
-<h1>Dashboard</h1>
-<p>KPIs go here: total properties, occupancy rate, rent collected, outstanding rent, revenue, profit/loss.</p>
+<header class="dashboard-header">
+    <div>
+        <p class="dashboard-eyebrow">Portfolio overview</p>
+        <h1>Dashboard</h1>
+        <p class="dashboard-subtitle">A current snapshot of occupancy and financial performance.</p>
+    </div>
+</header>
+
+<section class="dashboard-group" aria-labelledby="operational-heading">
+    <div class="group-heading"><div><p class="dashboard-eyebrow">Operations</p><h2 id="operational-heading">Portfolio at a glance</h2></div></div>
+    <div class="kpi-grid kpi-grid-four">
+    <article class="kpi-card">
+        <span class="kpi-label">Total Properties</span>
+        <strong class="kpi-value">{{ total_properties|intcomma }}</strong>
+    </article>
+    <article class="kpi-card">
+        <span class="kpi-label">Total Units</span>
+        <strong class="kpi-value">{{ total_units|intcomma }}</strong>
+        <span class="kpi-detail">{{ occupied_units|intcomma }} occupied</span>
+    </article>
+    <article class="kpi-card">
+        <span class="kpi-label">Occupancy Rate</span>
+        <strong class="kpi-value">{{ occupancy_rate|floatformat:1 }}%</strong>
+    </article>
+    <article class="kpi-card">
+        <span class="kpi-label">Active Contracts</span>
+        <strong class="kpi-value">{{ active_contracts|intcomma }}</strong>
+    </article>
+    </div>
+</section>
+
+<section class="dashboard-group" aria-labelledby="collections-heading">
+    <div class="group-heading"><div><p class="dashboard-eyebrow">Collections</p><h2 id="collections-heading">Rental performance</h2></div></div>
+    <div class="kpi-grid kpi-grid-three">
+    <article class="kpi-card">
+        <span class="kpi-label">Rent Due</span>
+        <strong class="kpi-value kpi-money">{{ rent_due|floatformat:2|intcomma }}</strong>
+        <span class="kpi-detail">Due schedules to date</span>
+    </article>
+    <article class="kpi-card kpi-card-positive">
+        <span class="kpi-label">Collected Rent</span>
+        <strong class="kpi-value kpi-money">{{ collected_rent|floatformat:2|intcomma }}</strong>
+    </article>
+    <article class="kpi-card kpi-card-warning">
+        <span class="kpi-label">Outstanding Rent</span>
+        <strong class="kpi-value kpi-money">{{ outstanding_rent|floatformat:2|intcomma }}</strong>
+    </article>
+    </div>
+</section>
+
+<section class="dashboard-group" aria-labelledby="financial-heading">
+    <div class="group-heading"><div><p class="dashboard-eyebrow">Financials</p><h2 id="financial-heading">Income and operating result</h2></div></div>
+    <div class="kpi-grid kpi-grid-three">
+    <article class="kpi-card kpi-card-negative">
+        <span class="kpi-label">Expenses</span>
+        <strong class="kpi-value kpi-money">{{ total_expenses|floatformat:2|intcomma }}</strong>
+    </article>
+    <article class="kpi-card kpi-card-positive">
+        <span class="kpi-label">Revenue</span>
+        <strong class="kpi-value kpi-money">{{ revenue|floatformat:2|intcomma }}</strong>
+        <span class="kpi-detail">Rental income only</span>
+    </article>
+    <article class="kpi-card {% if profit_loss < 0 %}kpi-card-negative{% else %}kpi-card-positive{% endif %}">
+        <span class="kpi-label">Profit / Loss</span>
+        <strong class="kpi-value kpi-money">{{ profit_loss|floatformat:2|intcomma }}</strong>
+        <span class="kpi-detail">{% if profit_loss < 0 %}Operating deficit{% else %}Operating surplus{% endif %}</span>
+    </article>
+    </div>
+</section>
+
+<section class="dashboard-panel">
+    <div class="panel-heading">
+        <div>
+            <p class="dashboard-eyebrow">Ledger</p>
+            <h2>Recent Transactions</h2>
+        </div>
+    </div>
+    {% if recent_transactions %}
+        <div class="table-scroll">
+            <table class="transaction-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Reference</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Amount</th>
+                        <th scope="col">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in recent_transactions %}
+                        <tr>
+                            <td>{{ transaction.transaction_reference }}</td>
+                            <td><span class="badge badge-neutral">{{ transaction.get_transaction_type_display }}</span></td>
+                            <td class="numeric">{{ transaction.amount|floatformat:2|intcomma }}</td>
+                            <td>{{ transaction.transaction_date|date:"M j, Y" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="dashboard-empty">
+            <strong>No transactions yet</strong>
+            <p>Financial activity will appear here once payments or expenses are recorded.</p>
+        </div>
+    {% endif %}
+</section>
 {% endblock %}

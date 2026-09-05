@@ -1,0 +1,9 @@
+{% extends 'finance/reports/base_report.html' %}{% load humanize %}
+{% block title %}Profit & Loss Report{% endblock %}{% block report_title %}Profit &amp; Loss{% endblock %}
+{% block report_description %}Rental income less operating expenses for the selected period.{% endblock %}
+{% block report_filter %}{% include 'finance/reports/_filter.html' %}{% endblock %}
+{% block report_content %}<section class="report-summary-grid">
+<article><span>Rental Revenue</span><strong>{{ revenue|floatformat:2|intcomma }}</strong></article>
+<article><span>Expenses</span><strong>{{ expenses|floatformat:2|intcomma }}</strong></article>
+<article class="{% if profit_loss < 0 %}summary-negative{% else %}summary-positive{% endif %}"><span>Profit / Loss</span><strong>{{ profit_loss|floatformat:2|intcomma }}</strong></article>
+</section>{% endblock %}

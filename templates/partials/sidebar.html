@@ -1,49 +1,69 @@
-<aside class="sidebar">
-    <div class="sidebar-section">
-        <h4>Operations</h4>
-        <ul class="sidebar-nav-list">
-            <li>
-                <a href="{% url 'operations:deposit_list' %}" class="{% if 'deposit' in request.path %}active{% endif %}">
-                    <span class="sidebar-icon">🔒</span>
-                    <span>Security Deposits</span>
-                </a>
-            </li>
-            <li>
-                <a href="{% url 'operations:maintenance_list' %}" class="{% if 'maintenance' in request.path %}active{% endif %}">
-                    <span class="sidebar-icon">🛠️</span>
-                    <span>Maintenance</span>
-                </a>
-            </li>
-            <li>
-                <a href="{% url 'operations:expense_list' %}" class="{% if 'expense' in request.path %}active{% endif %}">
-                    <span class="sidebar-icon">🧾</span>
-                    <span>Expenses</span>
-                </a>
-            </li>
-        </ul>
-    </div>
+<aside class="sidebar" aria-label="Sidebar navigation">
+    <nav class="sidebar-nav" aria-label="Application navigation">
+        <div class="sidebar-section">
+            <h4 class="sidebar-label">Operations</h4>
+            <ul class="sidebar-nav-list">
+                <li>
+                    <a href="{% url 'operations:deposit_list' %}" class="{% if 'deposit' in request.path %}active{% endif %}" {% if 'deposit' in request.path %}aria-current="page"{% endif %}>
+                        <span class="sidebar-icon">🔒</span>
+                        <span>Security Deposits</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'operations:maintenance_list' %}" class="{% if 'maintenance' in request.path %}active{% endif %}" {% if 'maintenance' in request.path %}aria-current="page"{% endif %}>
+                        <span class="sidebar-icon">🛠️</span>
+                        <span>Maintenance</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'operations:expense_list' %}" class="{% if 'expense' in request.path %}active{% endif %}" {% if 'expense' in request.path %}aria-current="page"{% endif %}>
+                        <span class="sidebar-icon">🧾</span>
+                        <span>Expenses</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
 
-    <div class="sidebar-section">
-        <h4>Management</h4>
-        <ul class="sidebar-nav-list">
-            <li>
-                <a href="{% url 'properties:property_list' %}" class="{% if 'property' in request.path %}active{% endif %}">
-                    <span class="sidebar-icon">🏠</span>
-                    <span>Properties</span>
-                </a>
-            </li>
-            <li>
-                <a href="{% url 'billing:invoice_list' %}" class="{% if 'invoice' in request.path %}active{% endif %}">
-                    <span class="sidebar-icon">📄</span>
-                    <span>Billing & Invoices</span>
-                </a>
-            </li>
-            <li>
-                <a href="{% url 'finance:dashboard' %}" class="{% if 'dashboard' in request.path %}active{% endif %}">
-                    <span class="sidebar-icon">📊</span>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-        </ul>
-    </div>
+        <div class="sidebar-section">
+            <h4 class="sidebar-label">Portfolio &amp; Billing</h4>
+            <ul class="sidebar-nav-list">
+                <li>
+                    <a href="{% url 'properties:property_list' %}" class="{% if 'property' in request.path %}active{% endif %}" {% if 'property' in request.path %}aria-current="page"{% endif %}>
+                        <span class="sidebar-icon">🏠</span>
+                        <span>Properties</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'billing:invoice_list' %}" class="{% if 'invoice' in request.path %}active{% endif %}" {% if 'invoice' in request.path %}aria-current="page"{% endif %}>
+                        <span class="sidebar-icon">📄</span>
+                        <span>Billing &amp; Invoices</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="sidebar-section">
+            <h4 class="sidebar-label">Finance &amp; Insights</h4>
+            <ul class="sidebar-nav-list">
+                <li>
+                    <a href="{% url 'finance:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' or 'dashboard' in request.path %}active{% endif %}" {% if request.resolver_match.url_name == 'dashboard' %}aria-current="page"{% endif %}>
+                        <span class="sidebar-icon">📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                {% if user.is_superuser or user.role == 'admin' or user.role == 'accountant' or user.role == 'owner' %}
+                <li>
+                    <a href="{% url 'finance:reports' %}" class="{% if request.resolver_match.namespace == 'finance' and request.resolver_match.url_name != 'dashboard' %}active{% endif %}" {% if request.resolver_match.namespace == 'finance' and request.resolver_match.url_name != 'dashboard' %}aria-current="page"{% endif %}>
+                        <span class="sidebar-icon">📈</span>
+                        <span>Financial Reports</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+        
+        <div class="sidebar-note" style="padding: 16px 12px 0; font-size: 0.75rem; color: var(--sidebar-ink-faint, #8AA083);">
+            Secure portfolio workspace
+        </div>
+    </nav>
 </aside>
