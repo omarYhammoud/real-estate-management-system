@@ -1,4 +1,4 @@
-from django.db.models.signals import post_save
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from apps.billing.models import Payment
@@ -12,6 +12,14 @@ def sync_transaction(*, reference, defaults, using):
         transaction_reference=reference,
         defaults=defaults,
     )
+
+
+def delete_generated_transaction(*, reference, entity_type, entity_id, using):
+    FinancialTransaction.objects.using(using).filter(
+        transaction_reference=reference,
+        related_entity_type=entity_type,
+        related_entity_id=entity_id,
+    ).delete()
 
 
 def persisted_source(sender, instance, using):
@@ -38,8 +46,18 @@ def sync_payment(sender, instance, using, **kwargs):
 @receiver(post_save, sender=Expense, dispatch_uid='finance.sync_expense')
 def sync_expense(sender, instance, using, **kwargs):
     expense = persisted_source(sender, instance, using)
+    reference = f'EXP-{expense.pk}'
+    if expense.status == Expense.ExpenseStatus.CANCELLED:
+        delete_generated_transaction(
+            reference=reference,
+            entity_type='expense',
+            entity_id=expense.pk,
+            using=using,
+        )
+        return
+
     sync_transaction(
-        reference=f'EXP-{expense.pk}',
+        reference=reference,
         defaults={
             'transaction_type': FinancialTransaction.TransactionType.EXPENSE,
             'amount': expense.amount,
@@ -93,5 +111,53 @@ def sync_deposit_refund(sender, instance, using, **kwargs):
             'related_entity_type': 'deposit_refund',
             'related_entity_id': refund.pk,
         },
+        using=using,
+    )
+
+
+@receiver(post_delete, sender=Payment, dispatch_uid='finance.delete_payment_transaction')
+def delete_payment_transaction(sender, instance, using, **kwargs):
+    delete_generated_transaction(
+        reference=f'PAY-{instance.pk}',
+        entity_type='payment',
+        entity_id=instance.pk,
+        using=using,
+    )
+
+
+@receiver(post_delete, sender=Expense, dispatch_uid='finance.delete_expense_transaction')
+def delete_expense_transaction(sender, instance, using, **kwargs):
+    delete_generated_transaction(
+        reference=f'EXP-{instance.pk}',
+        entity_type='expense',
+        entity_id=instance.pk,
+        using=using,
+    )
+
+
+@receiver(
+    post_delete,
+    sender=SecurityDeposit,
+    dispatch_uid='finance.delete_security_deposit_transaction',
+)
+def delete_security_deposit_transaction(sender, instance, using, **kwargs):
+    delete_generated_transaction(
+        reference=f'DEP-{instance.pk}',
+        entity_type='security_deposit',
+        entity_id=instance.pk,
+        using=using,
+    )
+
+
+@receiver(
+    post_delete,
+    sender=DepositRefund,
+    dispatch_uid='finance.delete_deposit_refund_transaction',
+)
+def delete_deposit_refund_transaction(sender, instance, using, **kwargs):
+    delete_generated_transaction(
+        reference=f'REF-{instance.pk}',
+        entity_type='deposit_refund',
+        entity_id=instance.pk,
         using=using,
     )

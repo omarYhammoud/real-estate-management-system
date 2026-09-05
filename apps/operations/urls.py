@@ -14,8 +14,14 @@ urlpatterns = [
     path('security-deposits/<int:pk>/', views.SecurityDepositDetailView.as_view(), name='deposit_detail'),
     path('security-deposits/<int:pk>/edit/', views.SecurityDepositUpdateView.as_view(), name='deposit_edit'),
 
-    # Deductions & Refunds (nested under deposit)
+    # Deductions
+    path('deductions/', views.DepositDeductionListView.as_view(), name='deduction_list'),
+    path('deductions/<int:pk>/', views.DepositDeductionDetailView.as_view(), name='deduction_detail'),
     path('security-deposits/<int:deposit_pk>/deductions/add/', views.DepositDeductionCreateView.as_view(), name='deduction_add'),
+
+    # Refunds
+    path('refunds/', views.DepositRefundListView.as_view(), name='refund_list'),
+    path('refunds/<int:pk>/', views.DepositRefundDetailView.as_view(), name='refund_detail'),
     path('security-deposits/<int:deposit_pk>/refunds/add/', views.DepositRefundCreateView.as_view(), name='refund_add'),
 
     # Maintenance Requests

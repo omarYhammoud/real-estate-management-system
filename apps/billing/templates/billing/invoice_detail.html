@@ -2,4 +2,12 @@
 {% block content %}
 <h1>Invoice {{ invoice.invoice_reference }}</h1>
 <p>Total: {{ invoice.total_amount }} — Status: {{ invoice.status }}</p>
+<p>Paid: {{ invoice.amount_paid }} — Outstanding: {{ invoice.outstanding_balance }}</p>
+<p><a href="{% url 'billing:payment_create' invoice.pk %}">Record payment</a> · <a href="{% url 'billing:payment_history' %}">Payment history</a></p>
+<h2>Payments</h2>
+<ul>
+    {% for payment in payments %}
+    <li>{{ payment.payment_reference }} — {{ payment.amount }}{% if payment.receipt %} — <a href="{% url 'billing:receipt_detail' payment.receipt.pk %}">Receipt</a>{% endif %}</li>
+    {% empty %}<li>No payments recorded.</li>{% endfor %}
+</ul>
 {% endblock %}

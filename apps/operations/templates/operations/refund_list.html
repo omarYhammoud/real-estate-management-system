@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Deposit Refunds — Keystone RMS{% endblock %}
+
+{% block content %}
+<div class="crumb">Operations / <b>Deposit Refunds</b></div>
+
+<div class="page-header">
+    <div><h1>Deposit Refunds</h1><p>Funds returned from tenant security deposits.</p></div>
+    <div class="actions"><a href="{% url 'operations:deposit_list' %}" class="btn btn-outline">Security Deposits</a><a href="{% url 'operations:deduction_list' %}" class="btn btn-secondary">Deductions</a></div>
+</div>
+
+<div class="table-card">
+    <div class="table-scroll">
+        <table class="table">
+            <thead><tr><th>Reference</th><th>Deposit / Contract</th><th>Tenant</th><th>Amount</th><th>Date</th><th>Method</th><th>Authorized by</th><th></th></tr></thead>
+            <tbody>
+                {% for refund in refunds %}
+                <tr>
+                    <td><a href="{% url 'operations:refund_detail' refund.pk %}" class="font-mono">{{ refund.refund_reference }}</a></td>
+                    <td><a href="{% url 'operations:deposit_detail' refund.deposit.pk %}">{{ refund.deposit.contract.contract_reference }}</a></td>
+                    <td>{{ refund.deposit.contract.tenant.full_name }}</td>
+                    <td class="money">${{ refund.amount }}</td>
+                    <td class="font-mono">{{ refund.refund_date }}</td>
+                    <td>{{ refund.refund_method|default:'—' }}</td>
+                    <td>{{ refund.authorized_by|default:'—' }}</td>
+                    <td><a href="{% url 'operations:refund_detail' refund.pk %}" class="btn btn-secondary btn-small">View</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8"><div class="empty-state"><div class="t">No Refunds Recorded</div><p class="sub">Refunds added from a security deposit will appear here.</p></div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if is_paginated %}
+<div class="pagination">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">← Previous</a>{% endif %}
+    <span>Page {{ page_obj.number }} of {{ page_obj.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Next →</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

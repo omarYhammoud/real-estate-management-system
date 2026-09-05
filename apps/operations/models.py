@@ -36,6 +36,50 @@ class SecurityDeposit(TimeStampedModel):
     class Meta:
         ordering = ['-created_at']
 
+    def clean(self):
+        super().clean()
+        if self._state.adding or self.received_amount is None:
+            return
+
+        deducted = (
+            self.deductions.aggregate(total=models.Sum('amount'))['total']
+            or Decimal('0.00')
+        )
+        refunded = (
+            self.refunds.aggregate(total=models.Sum('amount'))['total']
+            or Decimal('0.00')
+        )
+        used_balance = deducted + refunded
+        if self.received_amount < used_balance:
+            raise ValidationError({
+                'received_amount': (
+                    'Received amount cannot be less than the total already '
+                    f'deducted and refunded ({used_balance}).'
+                )
+            })
+
+    def save(self, *args, **kwargs):
+        update_fields = kwargs.get('update_fields')
+        original_values = {}
+        excluded_fields = []
+
+        if update_fields is not None and not self._state.adding:
+            update_fields = set(update_fields)
+            persisted = type(self).objects.get(pk=self.pk)
+            for field in self._meta.concrete_fields:
+                if field.name not in update_fields and field.attname not in update_fields:
+                    excluded_fields.append(field.name)
+                    original_values[field.attname] = getattr(self, field.attname)
+                    setattr(self, field.attname, getattr(persisted, field.attname))
+
+        try:
+            self.full_clean(exclude=excluded_fields)
+        finally:
+            for field_name, value in original_values.items():
+                setattr(self, field_name, value)
+
+        super().save(*args, **kwargs)
+
     def recalc_remaining_balance(self, save=True):
         """Recalculate remaining balance = received - deductions - refunds."""
         deducted = (
@@ -146,7 +190,25 @@ class DepositRefund(TimeStampedModel):
                 )
 
     def save(self, *args, **kwargs):
-        self.full_clean()
+        update_fields = kwargs.get('update_fields')
+        original_values = {}
+        excluded_fields = []
+
+        if update_fields is not None and not self._state.adding:
+            update_fields = set(update_fields)
+            persisted = type(self).objects.get(pk=self.pk)
+            for field in self._meta.concrete_fields:
+                if field.name not in update_fields and field.attname not in update_fields:
+                    excluded_fields.append(field.name)
+                    original_values[field.attname] = getattr(self, field.attname)
+                    setattr(self, field.attname, getattr(persisted, field.attname))
+
+        try:
+            self.full_clean(exclude=excluded_fields)
+        finally:
+            for field_name, value in original_values.items():
+                setattr(self, field_name, value)
+
         super().save(*args, **kwargs)
         self.deposit.recalc_remaining_balance()
 

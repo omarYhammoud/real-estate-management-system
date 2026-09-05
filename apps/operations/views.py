@@ -1,15 +1,17 @@
 """
 Alyousof — Deposits & Operations views.
-All views require login (LoginRequiredMixin).
+All views enforce role-based access through RoleRequiredMixin.
 Pattern: Django class-based generic views.
 """
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import (
-    ListView, DetailView, CreateView, UpdateView, DeleteView,
+    ListView, DetailView, CreateView, UpdateView,
 )
+
+from apps.core.mixins import RoleRequiredMixin
 
 from .models import SecurityDeposit, DepositDeduction, DepositRefund, MaintenanceRequest, Expense
 from .forms import (
@@ -18,18 +20,29 @@ from .forms import (
 )
 
 
+User = get_user_model()
+
+
+class FinancialOperationsMixin(RoleRequiredMixin):
+    allowed_roles = (User.Role.ADMIN, User.Role.ACCOUNTANT)
+
+
+class MaintenanceOperationsMixin(RoleRequiredMixin):
+    allowed_roles = (User.Role.ADMIN, User.Role.PROPERTY_MANAGER)
+
+
 # ---------------------------------------------------------------------------
 # Security Deposits
 # ---------------------------------------------------------------------------
 
-class SecurityDepositListView(LoginRequiredMixin, ListView):
+class SecurityDepositListView(FinancialOperationsMixin, ListView):
     model = SecurityDeposit
     template_name = 'operations/deposit_list.html'
     context_object_name = 'deposits'
     paginate_by = 20
 
 
-class SecurityDepositDetailView(LoginRequiredMixin, DetailView):
+class SecurityDepositDetailView(FinancialOperationsMixin, DetailView):
     model = SecurityDeposit
     template_name = 'operations/deposit_detail.html'
     context_object_name = 'deposit'
@@ -41,7 +54,7 @@ class SecurityDepositDetailView(LoginRequiredMixin, DetailView):
         return ctx
 
 
-class SecurityDepositCreateView(LoginRequiredMixin, CreateView):
+class SecurityDepositCreateView(FinancialOperationsMixin, CreateView):
     model = SecurityDeposit
     form_class = SecurityDepositForm
     template_name = 'operations/deposit_form.html'
@@ -57,7 +70,7 @@ class SecurityDepositCreateView(LoginRequiredMixin, CreateView):
         return response
 
 
-class SecurityDepositUpdateView(LoginRequiredMixin, UpdateView):
+class SecurityDepositUpdateView(FinancialOperationsMixin, UpdateView):
     model = SecurityDeposit
     form_class = SecurityDepositForm
     template_name = 'operations/deposit_form.html'
@@ -76,7 +89,34 @@ class SecurityDepositUpdateView(LoginRequiredMixin, UpdateView):
 # Deposit Deductions
 # ---------------------------------------------------------------------------
 
-class DepositDeductionCreateView(LoginRequiredMixin, CreateView):
+class DepositDeductionListView(FinancialOperationsMixin, ListView):
+    model = DepositDeduction
+    template_name = 'operations/deduction_list.html'
+    context_object_name = 'deductions'
+    paginate_by = 20
+
+    def get_queryset(self):
+        return super().get_queryset().select_related(
+            'deposit__contract',
+            'deposit__contract__tenant',
+            'authorized_by',
+        )
+
+
+class DepositDeductionDetailView(FinancialOperationsMixin, DetailView):
+    model = DepositDeduction
+    template_name = 'operations/deduction_detail.html'
+    context_object_name = 'deduction'
+
+    def get_queryset(self):
+        return super().get_queryset().select_related(
+            'deposit__contract',
+            'deposit__contract__tenant',
+            'authorized_by',
+        )
+
+
+class DepositDeductionCreateView(FinancialOperationsMixin, CreateView):
     model = DepositDeduction
     form_class = DepositDeductionForm
     template_name = 'operations/deduction_form.html'
@@ -96,6 +136,7 @@ class DepositDeductionCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.deposit = self._get_deposit()
+        form.instance.authorized_by = self.request.user
         messages.success(self.request, 'Deduction added successfully.')
         return super().form_valid(form)
 
@@ -107,7 +148,34 @@ class DepositDeductionCreateView(LoginRequiredMixin, CreateView):
 # Deposit Refunds
 # ---------------------------------------------------------------------------
 
-class DepositRefundCreateView(LoginRequiredMixin, CreateView):
+class DepositRefundListView(FinancialOperationsMixin, ListView):
+    model = DepositRefund
+    template_name = 'operations/refund_list.html'
+    context_object_name = 'refunds'
+    paginate_by = 20
+
+    def get_queryset(self):
+        return super().get_queryset().select_related(
+            'deposit__contract',
+            'deposit__contract__tenant',
+            'authorized_by',
+        )
+
+
+class DepositRefundDetailView(FinancialOperationsMixin, DetailView):
+    model = DepositRefund
+    template_name = 'operations/refund_detail.html'
+    context_object_name = 'refund'
+
+    def get_queryset(self):
+        return super().get_queryset().select_related(
+            'deposit__contract',
+            'deposit__contract__tenant',
+            'authorized_by',
+        )
+
+
+class DepositRefundCreateView(FinancialOperationsMixin, CreateView):
     model = DepositRefund
     form_class = DepositRefundForm
     template_name = 'operations/refund_form.html'
@@ -127,6 +195,7 @@ class DepositRefundCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.deposit = self._get_deposit()
+        form.instance.authorized_by = self.request.user
         messages.success(self.request, 'Refund recorded successfully.')
         return super().form_valid(form)
 
@@ -138,7 +207,7 @@ class DepositRefundCreateView(LoginRequiredMixin, CreateView):
 # Maintenance Requests
 # ---------------------------------------------------------------------------
 
-class MaintenanceListView(LoginRequiredMixin, ListView):
+class MaintenanceListView(MaintenanceOperationsMixin, ListView):
     model = MaintenanceRequest
     template_name = 'operations/maintenance_list.html'
     context_object_name = 'requests'
@@ -163,13 +232,13 @@ class MaintenanceListView(LoginRequiredMixin, ListView):
         return ctx
 
 
-class MaintenanceDetailView(LoginRequiredMixin, DetailView):
+class MaintenanceDetailView(MaintenanceOperationsMixin, DetailView):
     model = MaintenanceRequest
     template_name = 'operations/maintenance_detail.html'
     context_object_name = 'maintenance'
 
 
-class MaintenanceCreateView(LoginRequiredMixin, CreateView):
+class MaintenanceCreateView(MaintenanceOperationsMixin, CreateView):
     model = MaintenanceRequest
     form_class = MaintenanceRequestForm
     template_name = 'operations/maintenance_form.html'
@@ -179,7 +248,7 @@ class MaintenanceCreateView(LoginRequiredMixin, CreateView):
         return reverse_lazy('operations:maintenance_detail', kwargs={'pk': self.object.pk})
 
 
-class MaintenanceUpdateView(LoginRequiredMixin, UpdateView):
+class MaintenanceUpdateView(MaintenanceOperationsMixin, UpdateView):
     model = MaintenanceRequest
     form_class = MaintenanceRequestForm
     template_name = 'operations/maintenance_form.html'
@@ -193,7 +262,7 @@ class MaintenanceUpdateView(LoginRequiredMixin, UpdateView):
 # Expenses
 # ---------------------------------------------------------------------------
 
-class ExpenseListView(LoginRequiredMixin, ListView):
+class ExpenseListView(FinancialOperationsMixin, ListView):
     model = Expense
     template_name = 'operations/expense_list.html'
     context_object_name = 'expenses'
@@ -218,23 +287,27 @@ class ExpenseListView(LoginRequiredMixin, ListView):
         return ctx
 
 
-class ExpenseDetailView(LoginRequiredMixin, DetailView):
+class ExpenseDetailView(FinancialOperationsMixin, DetailView):
     model = Expense
     template_name = 'operations/expense_detail.html'
     context_object_name = 'expense'
 
 
-class ExpenseCreateView(LoginRequiredMixin, CreateView):
+class ExpenseCreateView(FinancialOperationsMixin, CreateView):
     model = Expense
     form_class = ExpenseForm
     template_name = 'operations/expense_form.html'
+
+    def form_valid(self, form):
+        form.instance.recorded_by = self.request.user
+        return super().form_valid(form)
 
     def get_success_url(self):
         messages.success(self.request, 'Expense recorded successfully.')
         return reverse_lazy('operations:expense_detail', kwargs={'pk': self.object.pk})
 
 
-class ExpenseUpdateView(LoginRequiredMixin, UpdateView):
+class ExpenseUpdateView(FinancialOperationsMixin, UpdateView):
     model = Expense
     form_class = ExpenseForm
     template_name = 'operations/expense_form.html'

@@ -19,7 +19,7 @@ urlpatterns = [
     path('billing/', include('apps.billing.urls')),           # Waad
     path('operations/', include('apps.operations.urls')),     # Alyousof
     path('', include('apps.finance.urls')),                   # Chaheen (dashboard/reports at root)
-    path('', RedirectView.as_view(pattern_name='finance:dashboard', permanent=False), name='root_redirect'),
+    path('', RedirectView.as_view(pattern_name='accounts:home', permanent=False), name='root_redirect'),
 ]
 
 if settings.DEBUG:

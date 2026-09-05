@@ -39,7 +39,7 @@ class DepositDeductionForm(forms.ModelForm):
 
     class Meta:
         model = DepositDeduction
-        fields = ['amount', 'reason', 'deduction_date', 'authorized_by']
+        fields = ['amount', 'reason', 'deduction_date']
         widgets = {
             'deduction_date': forms.DateInput(attrs={'type': 'date'}),
             'reason': forms.Textarea(attrs={'rows': 3}),
@@ -83,7 +83,7 @@ class DepositRefundForm(forms.ModelForm):
 
     class Meta:
         model = DepositRefund
-        fields = ['amount', 'refund_date', 'refund_method', 'refund_reference', 'authorized_by']
+        fields = ['amount', 'refund_date', 'refund_method', 'refund_reference']
         widgets = {
             'refund_date': forms.DateInput(attrs={'type': 'date'}),
         }
@@ -132,7 +132,7 @@ class ExpenseForm(forms.ModelForm):
     class Meta:
         model = Expense
         fields = [
-            'property', 'unit', 'recorded_by',
+            'property', 'unit',
             'expense_reference', 'category', 'amount',
             'expense_date', 'description', 'status',
         ]

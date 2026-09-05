@@ -104,17 +104,6 @@
             </div>
 
             <div class="form-field">
-                <label for="{{ form.recorded_by.id_for_label }}">Recorded By</label>
-                {{ form.recorded_by }}
-                {% if form.recorded_by.errors %}
-                <ul class="form-errors">
-                    {% for error in form.recorded_by.errors %}<li>{{ error }}</li>{% endfor %}
-                </ul>
-                {% endif %}
-                {% if form.recorded_by.help_text %}<span class="hint">{{ form.recorded_by.help_text }}</span>{% endif %}
-            </div>
-
-            <div class="form-field">
                 <label for="{{ form.status.id_for_label }}">Status</label>
                 {{ form.status }}
                 {% if form.status.errors %}

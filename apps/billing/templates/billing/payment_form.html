@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+{% block title %}Record Payment | Keystone RMS{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>Record Payment</h1><p>Invoice {{ invoice.invoice_reference }} — outstanding {{ invoice.outstanding_balance }}</p></div></div>
+<section class="panel"><form method="post">{% csrf_token %}{{ form.as_p }}<div class="actions"><button class="btn btn-primary" type="submit">Record Payment</button><a class="btn btn-outline" href="{% url 'billing:invoice_detail' invoice.pk %}">Cancel</a></div></form></section>
+{% endblock %}

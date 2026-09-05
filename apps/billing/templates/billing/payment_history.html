@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block title %}Payment History | Keystone RMS{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>Payment History</h1><p>Recorded rent payments and receipts.</p></div></div>
+<div class="table-card"><div class="table-scroll"><table class="table"><thead><tr><th>Reference</th><th>Invoice</th><th>Tenant</th><th>Date</th><th>Amount</th><th>Method</th><th>Receipt</th></tr></thead><tbody>{% for payment in payments %}<tr><td>{{ payment.payment_reference }}</td><td><a href="{% url 'billing:invoice_detail' payment.invoice.pk %}">{{ payment.invoice.invoice_reference }}</a></td><td>{{ payment.tenant }}</td><td>{{ payment.payment_date }}</td><td class="money">{{ payment.amount }}</td><td>{{ payment.get_payment_method_display }}</td><td>{% if payment.receipt %}<a href="{% url 'billing:receipt_detail' payment.receipt.pk %}">{{ payment.receipt.receipt_reference }}</a>{% else %}—{% endif %}</td></tr>{% empty %}<tr><td colspan="7"><div class="empty-state"><div class="t">No Payments Recorded</div></div></td></tr>{% endfor %}</tbody></table></div></div>
+{% if is_paginated %}<div class="pagination">{% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">← Previous</a>{% endif %}<span>Page {{ page_obj.number }} of {{ page_obj.num_pages }}</span>{% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Next →</a>{% endif %}</div>{% endif %}
+{% endblock %}

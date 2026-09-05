@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Refund {{ refund.refund_reference }} — Keystone RMS{% endblock %}
+
+{% block content %}
+<div class="crumb"><a href="{% url 'operations:refund_list' %}" class="breadcrumb-link">Deposit Refunds</a> / <b>{{ refund.refund_reference }}</b></div>
+
+<div class="page-header">
+    <div><h1>Refund {{ refund.refund_reference }}</h1><p>Return from deposit {{ refund.deposit.contract.contract_reference }}.</p></div>
+    <div class="actions"><a href="{% url 'operations:deposit_detail' refund.deposit.pk %}" class="btn btn-primary">View Security Deposit</a><a href="{% url 'operations:refund_list' %}" class="btn btn-outline">← All Refunds</a></div>
+</div>
+
+<div class="grid-2">
+    <section class="panel">
+        <h3>Refund Details</h3>
+        <div class="stat-line"><span class="k">Reference</span><span class="v font-mono">{{ refund.refund_reference }}</span></div>
+        <div class="stat-line"><span class="k">Amount</span><span class="v money">${{ refund.amount }}</span></div>
+        <div class="stat-line"><span class="k">Refund Date</span><span class="v font-mono">{{ refund.refund_date }}</span></div>
+        <div class="stat-line"><span class="k">Method</span><span class="v">{{ refund.refund_method|default:'—' }}</span></div>
+        <div class="stat-line"><span class="k">Authorized By</span><span class="v">{{ refund.authorized_by|default:'—' }}</span></div>
+    </section>
+    <section class="panel">
+        <h3>Deposit Context</h3>
+        <div class="stat-line"><span class="k">Contract</span><span class="v">{{ refund.deposit.contract.contract_reference }}</span></div>
+        <div class="stat-line"><span class="k">Tenant</span><span class="v">{{ refund.deposit.contract.tenant.full_name }}</span></div>
+        <div class="stat-line"><span class="k">Remaining Balance</span><span class="v money">${{ refund.deposit.remaining_balance }}</span></div>
+        <div class="stat-line"><span class="k">Created</span><span class="v font-mono">{{ refund.created_at|date:"M d, Y H:i" }}</span></div>
+        <div class="stat-line"><span class="k">Last Modified</span><span class="v font-mono">{{ refund.updated_at|date:"M d, Y H:i" }}</span></div>
+    </section>
+</div>
+{% endblock %}

@@ -13,7 +13,7 @@ from apps.operations.models import (
     MaintenanceRequest,
     Expense,
 )
-from apps.operations.forms import DepositDeductionForm, DepositRefundForm
+from apps.operations.forms import DepositDeductionForm, DepositRefundForm, ExpenseForm
 
 User = get_user_model()
 
@@ -228,6 +228,111 @@ class SecurityDepositModelTests(OperationsBaseTestCase):
             r_zero.clean()
 
 
+class SecurityDepositBalanceIntegrityTests(OperationsBaseTestCase):
+    def setUp(self):
+        super().setUp()
+        self.deposit = SecurityDeposit.objects.create(
+            contract=self.contract,
+            required_amount=Decimal('1000.00'),
+            received_amount=Decimal('1000.00'),
+            received_date=date(2026, 1, 1),
+            remaining_balance=Decimal('1000.00'),
+            status=SecurityDeposit.Status.HELD,
+        )
+
+    def add_deduction(self, amount=Decimal('300.00')):
+        return DepositDeduction.objects.create(
+            deposit=self.deposit,
+            authorized_by=self.user,
+            amount=amount,
+            reason='Damage charge',
+            deduction_date=date(2026, 2, 1),
+        )
+
+    def add_refund(self, amount=Decimal('200.00')):
+        return DepositRefund.objects.create(
+            deposit=self.deposit,
+            authorized_by=self.user,
+            amount=amount,
+            refund_date=date(2026, 3, 1),
+            refund_reference='BALANCE-REFUND',
+        )
+
+    def test_lowering_received_amount_below_used_balance_is_rejected(self):
+        self.add_deduction()
+        self.add_refund()
+        self.deposit.received_amount = Decimal('499.99')
+
+        with self.assertRaises(ValidationError) as error:
+            self.deposit.save(update_fields=['received_amount'])
+
+        self.assertIn('received_amount', error.exception.message_dict)
+        self.deposit.refresh_from_db()
+        self.assertEqual(self.deposit.received_amount, Decimal('1000.00'))
+
+    def test_lowering_received_amount_to_used_balance_is_allowed(self):
+        self.add_deduction()
+        self.add_refund()
+        self.deposit.received_amount = Decimal('500.00')
+
+        self.deposit.save(update_fields=['received_amount'])
+        self.deposit.recalc_remaining_balance()
+        self.deposit.refresh_from_db()
+
+        self.assertEqual(self.deposit.received_amount, Decimal('500.00'))
+        self.assertEqual(self.deposit.remaining_balance, Decimal('0.00'))
+
+    def test_increasing_received_amount_is_allowed(self):
+        self.add_deduction()
+        self.deposit.received_amount = Decimal('1200.00')
+
+        self.deposit.save(update_fields=['received_amount'])
+
+        self.deposit.refresh_from_db()
+        self.assertEqual(self.deposit.received_amount, Decimal('1200.00'))
+
+    def test_update_without_deductions_or_refunds_is_allowed(self):
+        self.deposit.received_amount = Decimal('250.00')
+
+        self.deposit.save(update_fields=['received_amount'])
+
+        self.deposit.refresh_from_db()
+        self.assertEqual(self.deposit.received_amount, Decimal('250.00'))
+
+    def test_existing_deduction_prevents_invalid_reduction(self):
+        self.add_deduction(Decimal('300.00'))
+        self.deposit.received_amount = Decimal('299.99')
+
+        with self.assertRaises(ValidationError):
+            self.deposit.save()
+
+    def test_existing_refund_prevents_invalid_reduction(self):
+        self.add_refund(Decimal('200.00'))
+        self.deposit.received_amount = Decimal('199.99')
+
+        with self.assertRaises(ValidationError):
+            self.deposit.save()
+
+    def test_deduction_and_refund_totals_are_combined(self):
+        self.add_deduction(Decimal('300.00'))
+        self.add_refund(Decimal('200.00'))
+        self.deposit.received_amount = Decimal('400.00')
+
+        with self.assertRaises(ValidationError):
+            self.deposit.save()
+
+    def test_remaining_balance_never_becomes_negative_after_valid_saves(self):
+        self.add_deduction(Decimal('300.00'))
+        self.add_refund(Decimal('200.00'))
+        self.deposit.received_amount = Decimal('500.00')
+
+        self.deposit.save()
+        self.deposit.recalc_remaining_balance()
+        self.deposit.refresh_from_db()
+
+        self.assertGreaterEqual(self.deposit.remaining_balance, Decimal('0.00'))
+
+
 class MaintenanceAndExpenseModelTests(OperationsBaseTestCase):
     def test_create_maintenance_request(self):
         maint = MaintenanceRequest.objects.create(
@@ -359,47 +464,237 @@ class OperationsViewsTests(OperationsBaseTestCase):
             amount=Decimal('85.50'),
             expense_date=date(2026, 4, 5),
         )
+        self.deduction = DepositDeduction.objects.create(
+            deposit=self.deposit,
+            authorized_by=self.user,
+            amount=Decimal('100.00'),
+            reason='Standalone deduction record',
+            deduction_date=date(2026, 4, 6),
+        )
+        self.refund = DepositRefund.objects.create(
+            deposit=self.deposit,
+            authorized_by=self.user,
+            amount=Decimal('100.00'),
+            refund_date=date(2026, 4, 7),
+            refund_method='Bank Transfer',
+            refund_reference='STANDALONE-REFUND',
+        )
 
-    def test_anonymous_user_redirected_to_login(self):
-        urls = [
+        self.financial_urls = [
             reverse('operations:deposit_list'),
             reverse('operations:deposit_create'),
             reverse('operations:deposit_detail', kwargs={'pk': self.deposit.pk}),
             reverse('operations:deposit_edit', kwargs={'pk': self.deposit.pk}),
             reverse('operations:deduction_add', kwargs={'deposit_pk': self.deposit.pk}),
+            reverse('operations:deduction_list'),
+            reverse('operations:deduction_detail', kwargs={'pk': self.deduction.pk}),
             reverse('operations:refund_add', kwargs={'deposit_pk': self.deposit.pk}),
-            reverse('operations:maintenance_list'),
-            reverse('operations:maintenance_create'),
-            reverse('operations:maintenance_detail', kwargs={'pk': self.maintenance.pk}),
-            reverse('operations:maintenance_edit', kwargs={'pk': self.maintenance.pk}),
+            reverse('operations:refund_list'),
+            reverse('operations:refund_detail', kwargs={'pk': self.refund.pk}),
             reverse('operations:expense_list'),
             reverse('operations:expense_create'),
             reverse('operations:expense_detail', kwargs={'pk': self.expense.pk}),
             reverse('operations:expense_edit', kwargs={'pk': self.expense.pk}),
         ]
-        for url in urls:
-            response = self.client.get(url)
-            self.assertEqual(response.status_code, 302, f"Expected 302 redirect for unauthenticated user on {url}")
-
-    def test_authenticated_user_can_access_views(self):
-        self.client.login(username='testuser', password='password123')
-
-        urls_and_expected = [
-            (reverse('operations:deposit_list'), 200),
-            (reverse('operations:deposit_create'), 200),
-            (reverse('operations:deposit_detail', kwargs={'pk': self.deposit.pk}), 200),
-            (reverse('operations:deposit_edit', kwargs={'pk': self.deposit.pk}), 200),
-            (reverse('operations:deduction_add', kwargs={'deposit_pk': self.deposit.pk}), 200),
-            (reverse('operations:refund_add', kwargs={'deposit_pk': self.deposit.pk}), 200),
-            (reverse('operations:maintenance_list'), 200),
-            (reverse('operations:maintenance_create'), 200),
-            (reverse('operations:maintenance_detail', kwargs={'pk': self.maintenance.pk}), 200),
-            (reverse('operations:maintenance_edit', kwargs={'pk': self.maintenance.pk}), 200),
-            (reverse('operations:expense_list'), 200),
-            (reverse('operations:expense_create'), 200),
-            (reverse('operations:expense_detail', kwargs={'pk': self.expense.pk}), 200),
-            (reverse('operations:expense_edit', kwargs={'pk': self.expense.pk}), 200),
+        self.maintenance_urls = [
+            reverse('operations:maintenance_list'),
+            reverse('operations:maintenance_create'),
+            reverse('operations:maintenance_detail', kwargs={'pk': self.maintenance.pk}),
+            reverse('operations:maintenance_edit', kwargs={'pk': self.maintenance.pk}),
         ]
-        for url, expected_status in urls_and_expected:
-            response = self.client.get(url)
-            self.assertEqual(response.status_code, expected_status, f"Failed on URL: {url}")
+
+    def create_user(self, username, role, **kwargs):
+        return User.objects.create_user(
+            username=username,
+            password='password123',
+            role=role,
+            **kwargs,
+        )
+
+    def assert_status_for_urls(self, urls, expected_status):
+        for url in urls:
+            with self.subTest(url=url):
+                self.assertEqual(self.client.get(url).status_code, expected_status)
+
+    def test_anonymous_user_redirected_to_login(self):
+        self.assert_status_for_urls(self.financial_urls + self.maintenance_urls, 302)
+
+    def test_admin_can_access_all_operations_views(self):
+        self.client.force_login(self.create_user('admin', User.Role.ADMIN))
+        self.assert_status_for_urls(self.financial_urls + self.maintenance_urls, 200)
+
+    def test_accountant_can_access_financial_views_only(self):
+        self.client.force_login(
+            self.create_user('accountant', User.Role.ACCOUNTANT)
+        )
+        self.assert_status_for_urls(self.financial_urls, 200)
+        self.assert_status_for_urls(self.maintenance_urls, 403)
+
+    def test_property_manager_can_access_maintenance_views_only(self):
+        self.client.force_login(
+            self.create_user('property-manager', User.Role.PROPERTY_MANAGER)
+        )
+        self.assert_status_for_urls(self.financial_urls, 403)
+        self.assert_status_for_urls(self.maintenance_urls, 200)
+
+    def test_owner_cannot_access_operations_management(self):
+        self.client.force_login(self.create_user('role-owner', User.Role.OWNER))
+        self.assert_status_for_urls(self.financial_urls + self.maintenance_urls, 403)
+
+    def test_tenant_cannot_access_operations_management(self):
+        self.client.force_login(self.user)
+        self.assert_status_for_urls(self.financial_urls + self.maintenance_urls, 403)
+
+    def test_superuser_can_access_all_operations_views(self):
+        superuser = self.create_user(
+            'superuser',
+            User.Role.TENANT,
+            is_staff=True,
+            is_superuser=True,
+        )
+        self.client.force_login(superuser)
+        self.assert_status_for_urls(self.financial_urls + self.maintenance_urls, 200)
+
+    def test_financial_forms_do_not_expose_actor_fields(self):
+        self.assertNotIn('authorized_by', DepositDeductionForm().fields)
+        self.assertNotIn('authorized_by', DepositRefundForm().fields)
+        self.assertNotIn('recorded_by', ExpenseForm().fields)
+
+    def test_financial_actions_store_authenticated_actor(self):
+        accountant = self.create_user('acting-accountant', User.Role.ACCOUNTANT)
+        impersonated_user = self.create_user('impersonated-admin', User.Role.ADMIN)
+        self.client.force_login(accountant)
+
+        deduction_response = self.client.post(
+            reverse('operations:deduction_add', kwargs={'deposit_pk': self.deposit.pk}),
+            {
+                'amount': '100.00',
+                'reason': 'Cleaning',
+                'deduction_date': '2026-04-10',
+                'authorized_by': impersonated_user.pk,
+            },
+        )
+        refund_response = self.client.post(
+            reverse('operations:refund_add', kwargs={'deposit_pk': self.deposit.pk}),
+            {
+                'amount': '100.00',
+                'refund_date': '2026-04-11',
+                'refund_method': 'Bank Transfer',
+                'refund_reference': 'AUTH-REFUND',
+                'authorized_by': impersonated_user.pk,
+            },
+        )
+        expense_response = self.client.post(
+            reverse('operations:expense_create'),
+            {
+                'property': self.property.pk,
+                'unit': self.unit.pk,
+                'recorded_by': impersonated_user.pk,
+                'expense_reference': 'AUTH-EXPENSE',
+                'category': Expense.Category.CLEANING,
+                'amount': '75.00',
+                'expense_date': '2026-04-12',
+                'description': 'Common-area cleaning',
+                'status': Expense.ExpenseStatus.RECORDED,
+            },
+        )
+
+        self.assertEqual(deduction_response.status_code, 302)
+        self.assertEqual(refund_response.status_code, 302)
+        self.assertEqual(expense_response.status_code, 302)
+        self.assertEqual(
+            DepositDeduction.objects.get(reason='Cleaning').authorized_by,
+            accountant,
+        )
+        self.assertEqual(
+            DepositRefund.objects.get(refund_reference='AUTH-REFUND').authorized_by,
+            accountant,
+        )
+        self.assertEqual(
+            Expense.objects.get(expense_reference='AUTH-EXPENSE').recorded_by,
+            accountant,
+        )
+
+    def test_deduction_record_appears_on_list_with_detail_and_deposit_links(self):
+        self.client.force_login(
+            self.create_user('deduction-accountant', User.Role.ACCOUNTANT)
+        )
+
+        response = self.client.get(reverse('operations:deduction_list'))
+
+        self.assertContains(response, 'Standalone deduction record')
+        self.assertContains(
+            response,
+            reverse('operations:deduction_detail', kwargs={'pk': self.deduction.pk}),
+        )
+        self.assertContains(
+            response,
+            reverse('operations:deposit_detail', kwargs={'pk': self.deposit.pk}),
+        )
+
+    def test_deduction_detail_shows_only_requested_record_and_deposit_context(self):
+        other = DepositDeduction.objects.create(
+            deposit=self.deposit,
+            authorized_by=self.user,
+            amount=Decimal('50.00'),
+            reason='Other deduction record',
+            deduction_date=date(2026, 4, 8),
+        )
+        self.client.force_login(
+            self.create_user('deduction-detail-admin', User.Role.ADMIN)
+        )
+
+        response = self.client.get(
+            reverse('operations:deduction_detail', kwargs={'pk': self.deduction.pk})
+        )
+
+        self.assertEqual(response.context['deduction'], self.deduction)
+        self.assertContains(response, self.deduction.reason)
+        self.assertNotContains(response, other.reason)
+        self.assertContains(response, self.contract.contract_reference)
+        self.assertContains(
+            response,
+            reverse('operations:deposit_detail', kwargs={'pk': self.deposit.pk}),
+        )
+
+    def test_refund_record_appears_on_list_with_detail_and_deposit_links(self):
+        self.client.force_login(
+            self.create_user('refund-accountant', User.Role.ACCOUNTANT)
+        )
+
+        response = self.client.get(reverse('operations:refund_list'))
+
+        self.assertContains(response, self.refund.refund_reference)
+        self.assertContains(
+            response,
+            reverse('operations:refund_detail', kwargs={'pk': self.refund.pk}),
+        )
+        self.assertContains(
+            response,
+            reverse('operations:deposit_detail', kwargs={'pk': self.deposit.pk}),
+        )
+
+    def test_refund_detail_shows_only_requested_record_and_deposit_context(self):
+        other = DepositRefund.objects.create(
+            deposit=self.deposit,
+            authorized_by=self.user,
+            amount=Decimal('50.00'),
+            refund_date=date(2026, 4, 8),
+            refund_reference='OTHER-STANDALONE-REFUND',
+        )
+        self.client.force_login(
+            self.create_user('refund-detail-admin', User.Role.ADMIN)
+        )
+
+        response = self.client.get(
+            reverse('operations:refund_detail', kwargs={'pk': self.refund.pk})
+        )
+
+        self.assertEqual(response.context['refund'], self.refund)
+        self.assertContains(response, self.refund.refund_reference)
+        self.assertNotContains(response, other.refund_reference)
+        self.assertContains(response, self.contract.contract_reference)
+        self.assertContains(
+            response,
+            reverse('operations:deposit_detail', kwargs={'pk': self.deposit.pk}),
+        )

@@ -1,5 +1,9 @@
 from django import forms
-from .models import Invoice, InvoiceLineItem, Payment
+from .models import Payment
 
-# Waad: define ModelForms + formsets here, e.g. an InvoiceLineItem inline
-# formset for the "Create Invoice" page.
+
+class PaymentForm(forms.ModelForm):
+    class Meta:
+        model = Payment
+        fields = ['payment_reference', 'payment_date', 'amount', 'payment_method']
+        widgets = {'payment_date': forms.DateInput(attrs={'type': 'date'})}

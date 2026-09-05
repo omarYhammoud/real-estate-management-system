@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Account Home | Keystone RMS{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Welcome, {{ user.get_full_name|default:user.username }}</h1>
+        <p>Your Keystone RMS account is active.</p>
+    </div>
+</div>
+<section class="panel">
+    <h3>Account</h3>
+    <div class="stat-line"><span class="k">Username</span><span class="v">{{ user.username }}</span></div>
+    <div class="stat-line"><span class="k">Role</span><span class="v">{{ user.get_role_display }}</span></div>
+    {% if user.role != 'tenant' or user.is_superuser %}
+    <div class="actions" style="margin-top: 16px;"><a href="{% url 'finance:dashboard' %}" class="btn btn-primary">Open Dashboard</a></div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -10,6 +10,8 @@
         <p>Tenant escrow deposits held, deductions authorized, and refunds processed across active contracts.</p>
     </div>
     <div class="actions">
+        <a href="{% url 'operations:deduction_list' %}" class="btn btn-outline">Deductions</a>
+        <a href="{% url 'operations:refund_list' %}" class="btn btn-outline">Refunds</a>
         <a href="{% url 'operations:deposit_create' %}" class="btn btn-primary">+ Record Deposit</a>
     </div>
 </div>

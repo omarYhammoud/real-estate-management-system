@@ -58,8 +58,10 @@ class DateFilteredReportMixin(FinancialReportMixin):
 
     def filter_by_date(self, queryset, field_name):
         form = self.get_filter_form()
-        if not form.is_valid():
+        if not form.is_bound:
             return queryset
+        if not form.is_valid():
+            return queryset.none()
         start_date = form.cleaned_data.get('start_date')
         end_date = form.cleaned_data.get('end_date')
         if start_date:
@@ -200,7 +202,9 @@ class ExpenseSummaryView(DateFilteredReportMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         expenses = self.filter_by_date(
-            Expense.objects.select_related('property', 'unit', 'recorded_by'),
+            Expense.objects.exclude(
+                status=Expense.ExpenseStatus.CANCELLED
+            ).select_related('property', 'unit', 'recorded_by'),
             'expense_date',
         )
         summary = expenses.aggregate(total=Sum('amount'), count=Count('pk'))
@@ -325,7 +329,12 @@ class PropertyPerformanceView(DateFilteredReportMixin, TemplateView):
             properties = properties.filter(pk=selected_property.pk)
         property_ids = list(properties.values_list('pk', flat=True))
         payments = self.filter_by_date(Payment.objects.filter(invoice__contract__unit__property_id__in=property_ids), 'payment_date')
-        expenses = self.filter_by_date(Expense.objects.filter(property_id__in=property_ids), 'expense_date')
+        expenses = self.filter_by_date(
+            Expense.objects.filter(property_id__in=property_ids).exclude(
+                status=Expense.ExpenseStatus.CANCELLED
+            ),
+            'expense_date',
+        )
         revenue_map = dict(payments.values('invoice__contract__unit__property_id').annotate(total=Sum('amount')).values_list('invoice__contract__unit__property_id', 'total'))
         expense_map = dict(expenses.values('property_id').annotate(total=Sum('amount')).values_list('property_id', 'total'))
         rows = []

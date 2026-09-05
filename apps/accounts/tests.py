@@ -80,6 +80,53 @@ class AuthenticationViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotIn('_auth_user_id', self.client.session)
 
+    def test_tenant_login_uses_safe_account_home(self):
+        tenant = User.objects.create_user(
+            username='tenant-login',
+            password=self.password,
+            role=User.Role.TENANT,
+        )
+
+        response = self.client.post(
+            reverse('accounts:login'),
+            {'username': tenant.username, 'password': self.password},
+        )
+
+        self.assertRedirects(response, reverse('accounts:home'))
+        self.assertNotEqual(response.url, reverse('finance:dashboard'))
+
+    def test_non_tenant_roles_continue_to_use_dashboard(self):
+        for role in (
+            User.Role.ADMIN,
+            User.Role.ACCOUNTANT,
+            User.Role.OWNER,
+            User.Role.PROPERTY_MANAGER,
+        ):
+            with self.subTest(role=role):
+                user = User.objects.create_user(
+                    username=f'login-{role}',
+                    password=self.password,
+                    role=role,
+                )
+                response = self.client.post(
+                    reverse('accounts:login'),
+                    {'username': user.username, 'password': self.password},
+                )
+                self.assertRedirects(
+                    response,
+                    reverse('finance:dashboard'),
+                    fetch_redirect_response=False,
+                )
+                self.client.logout()
+
+    def test_safe_next_url_is_preserved(self):
+        response = self.client.post(
+            f"{reverse('accounts:login')}?next={reverse('accounts:home')}",
+            {'username': self.user.username, 'password': self.password},
+        )
+
+        self.assertRedirects(response, reverse('accounts:home'))
+
     def test_external_next_url_is_not_used(self):
         response = self.client.post(
             f"{reverse('accounts:login')}?next=https://example.com/unsafe",
@@ -99,3 +146,15 @@ class AuthenticationViewTests(TestCase):
 
         self.assertRedirects(response, reverse('accounts:login'))
         self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_tenant_root_redirects_to_safe_authenticated_home(self):
+        tenant = User.objects.create_user(
+            username='tenant-root',
+            password=self.password,
+            role=User.Role.TENANT,
+        )
+        self.client.force_login(tenant)
+
+        response = self.client.get('/')
+
+        self.assertRedirects(response, reverse('accounts:home'))

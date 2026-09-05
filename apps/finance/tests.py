@@ -348,14 +348,38 @@ class FinancialReportTests(TestCase):
         self.assertEqual(context['expenses'], Decimal('250.00'))
         self.assertEqual(context['profit_loss'], Decimal('750.00'))
 
-    def test_invalid_date_filter_does_not_crash_or_filter(self):
+    def test_invalid_date_filter_fails_closed(self):
         self.create_transaction('INVALID-DATE', FinancialTransaction.TransactionType.RENT_INCOME, Decimal('300.00'), date(2026, 1, 1))
 
         response = self.client.get(reverse('finance:report_revenue'), {'start_date': 'not-a-date'})
 
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.context['filter_form'].is_valid())
-        self.assertEqual(response.context['total_revenue'], Decimal('300.00'))
+        self.assertEqual(response.context['total_revenue'], Decimal('0.00'))
+        self.assertEqual(response.context['transaction_count'], 0)
+
+    def test_reversed_date_range_fails_closed(self):
+        self.create_transaction('REVERSED-DATE', FinancialTransaction.TransactionType.RENT_INCOME, Decimal('300.00'), date(2026, 1, 1))
+
+        response = self.client.get(reverse('finance:report_revenue'), {
+            'start_date': '2026-02-01',
+            'end_date': '2026-01-01',
+        })
+
+        self.assertFalse(response.context['filter_form'].is_valid())
+        self.assertEqual(response.context['total_revenue'], Decimal('0.00'))
+        self.assertEqual(response.context['transaction_count'], 0)
+
+    def test_valid_empty_date_range_returns_no_unrelated_records(self):
+        self.create_transaction('OUTSIDE-RANGE', FinancialTransaction.TransactionType.RENT_INCOME, Decimal('300.00'), date(2026, 1, 1))
+
+        context = self.client.get(reverse('finance:report_revenue'), {
+            'start_date': '2026-03-01',
+            'end_date': '2026-03-31',
+        }).context
+
+        self.assertEqual(context['total_revenue'], Decimal('0.00'))
+        self.assertEqual(context['transaction_count'], 0)
 
     def test_revenue_summary_only_counts_rent_income_in_date_range(self):
         self.create_transaction('REV-IN', FinancialTransaction.TransactionType.RENT_INCOME, Decimal('600.00'), date(2026, 3, 1))
@@ -368,17 +392,31 @@ class FinancialReportTests(TestCase):
         self.assertEqual(context['transaction_count'], 1)
 
     def test_expense_summary_total_categories_and_date_filter(self):
-        Expense.objects.create(property=self.property, recorded_by=self.user, expense_reference='UTIL-1', category=Expense.Category.UTILITIES, amount=Decimal('100.00'), expense_date=date(2026, 2, 1))
+        Expense.objects.create(property=self.property, recorded_by=self.user, expense_reference='ELEC-1', category=Expense.Category.ELECTRICITY, amount=Decimal('100.00'), expense_date=date(2026, 2, 1))
         Expense.objects.create(property=self.property, recorded_by=self.user, expense_reference='MAINT-1', category=Expense.Category.MAINTENANCE, amount=Decimal('250.00'), expense_date=date(2026, 2, 2))
-        Expense.objects.create(property=self.property, recorded_by=self.user, expense_reference='OLD-EXP', category=Expense.Category.UTILITIES, amount=Decimal('50.00'), expense_date=date(2026, 1, 1))
+        Expense.objects.create(property=self.property, recorded_by=self.user, expense_reference='OLD-EXP', category=Expense.Category.ELECTRICITY, amount=Decimal('50.00'), expense_date=date(2026, 1, 1))
 
         context = self.client.get(reverse('finance:report_expenses'), {'start_date': '2026-02-01'}).context
 
         self.assertEqual(context['total_expenses'], Decimal('350.00'))
         self.assertEqual(context['expense_count'], 2)
         totals = {row['category']: row['total'] for row in context['category_breakdown']}
-        self.assertEqual(totals[Expense.Category.UTILITIES], Decimal('100.00'))
+        self.assertEqual(totals[Expense.Category.ELECTRICITY], Decimal('100.00'))
         self.assertEqual(totals[Expense.Category.MAINTENANCE], Decimal('250.00'))
+
+    def test_cancelled_expenses_are_excluded_from_expense_reports(self):
+        Expense.objects.create(property=self.property, recorded_by=self.user, expense_reference='ACTIVE-REPORT-EXP', category=Expense.Category.MAINTENANCE, amount=Decimal('100.00'), expense_date=date(2026, 2, 1))
+        Expense.objects.create(property=self.property, recorded_by=self.user, expense_reference='CANCELLED-REPORT-EXP', category=Expense.Category.MAINTENANCE, amount=Decimal('900.00'), expense_date=date(2026, 2, 1), status=Expense.ExpenseStatus.CANCELLED)
+
+        expense_context = self.client.get(reverse('finance:report_expenses')).context
+        property_context = self.client.get(
+            reverse('finance:report_property_performance'),
+            {'property': self.property.pk},
+        ).context
+
+        self.assertEqual(expense_context['total_expenses'], Decimal('100.00'))
+        self.assertEqual(expense_context['expense_count'], 1)
+        self.assertEqual(property_context['total_expenses'], Decimal('100.00'))
 
     def test_receivables_include_open_balances_and_exclude_paid(self):
         unpaid = self.create_invoice('UNPAID', Decimal('1000.00'))
@@ -415,7 +453,7 @@ class FinancialReportTests(TestCase):
         self.assertNotIn(overpaid.pk, balances)
         self.assertEqual(context['total_outstanding'], Decimal('160.00'))
 
-    def test_payment_deletion_exposes_stale_paid_invoice_balance(self):
+    def test_payment_deletion_refreshes_invoice_and_exposes_balance(self):
         invoice = self.create_invoice('DELETED-PAYMENT-INVOICE', Decimal('100.00'))
         payment = self.create_payment(
             invoice,
@@ -427,7 +465,7 @@ class FinancialReportTests(TestCase):
 
         payment.delete()
         invoice.refresh_from_db()
-        self.assertEqual(invoice.status, Invoice.Status.PAID)
+        self.assertEqual(invoice.status, Invoice.Status.UNPAID)
 
         report_context = self.client.get(
             reverse('finance:report_receivables')
@@ -838,6 +876,137 @@ class LedgerSynchronizationTests(TestCase):
         self.assertEqual(refund.amount, Decimal('100.00'))
         self.assertEqual(transaction.amount, Decimal('100.00'))
         self.assertEqual(transaction.transaction_date, date(2026, 1, 12))
+
+    def test_payment_delete_removes_generated_transaction(self):
+        payment = self.create_payment()
+        reference = f'PAY-{payment.pk}'
+
+        payment.delete()
+
+        self.assertFalse(
+            FinancialTransaction.objects.filter(
+                transaction_reference=reference
+            ).exists()
+        )
+
+    def test_expense_delete_removes_generated_transaction(self):
+        expense = self.create_expense()
+        reference = f'EXP-{expense.pk}'
+
+        expense.delete()
+
+        self.assertFalse(
+            FinancialTransaction.objects.filter(
+                transaction_reference=reference
+            ).exists()
+        )
+
+    def test_security_deposit_delete_removes_generated_transaction(self):
+        deposit = self.create_deposit()
+        reference = f'DEP-{deposit.pk}'
+
+        deposit.delete()
+
+        self.assertFalse(
+            FinancialTransaction.objects.filter(
+                transaction_reference=reference
+            ).exists()
+        )
+
+    def test_deposit_refund_delete_removes_generated_transaction(self):
+        deposit = self.create_deposit()
+        refund = DepositRefund.objects.create(
+            deposit=deposit,
+            authorized_by=self.user,
+            refund_date=date(2026, 1, 9),
+            amount=Decimal('100.00'),
+            refund_reference='DELETE-REFUND',
+        )
+        reference = f'REF-{refund.pk}'
+
+        refund.delete()
+
+        self.assertFalse(
+            FinancialTransaction.objects.filter(
+                transaction_reference=reference
+            ).exists()
+        )
+
+    def test_source_delete_preserves_other_and_manual_transactions(self):
+        payment = self.create_payment()
+        expense = self.create_expense()
+        manual = FinancialTransaction.objects.create(
+            transaction_reference='MANUAL-ENTRY',
+            transaction_type=FinancialTransaction.TransactionType.OTHER,
+            amount=Decimal('25.00'),
+            transaction_date=date(2026, 1, 15),
+        )
+
+        payment.delete()
+
+        self.assertTrue(
+            FinancialTransaction.objects.filter(
+                transaction_reference=f'EXP-{expense.pk}'
+            ).exists()
+        )
+        self.assertTrue(
+            FinancialTransaction.objects.filter(pk=manual.pk).exists()
+        )
+
+    def test_cancelled_expense_does_not_create_transaction(self):
+        expense = self.create_expense(
+            status=Expense.ExpenseStatus.CANCELLED,
+        )
+
+        self.assertFalse(
+            FinancialTransaction.objects.filter(
+                transaction_reference=f'EXP-{expense.pk}'
+            ).exists()
+        )
+
+    def test_active_expense_changed_to_cancelled_removes_transaction(self):
+        expense = self.create_expense()
+        reference = f'EXP-{expense.pk}'
+
+        expense.status = Expense.ExpenseStatus.CANCELLED
+        expense.save(update_fields=['status'])
+
+        self.assertFalse(
+            FinancialTransaction.objects.filter(
+                transaction_reference=reference
+            ).exists()
+        )
+
+    def test_cancelled_expense_restored_recreates_transaction(self):
+        expense = self.create_expense(
+            status=Expense.ExpenseStatus.CANCELLED,
+        )
+        expense.status = Expense.ExpenseStatus.APPROVED
+        expense.save(update_fields=['status'])
+
+        transaction = FinancialTransaction.objects.get(
+            transaction_reference=f'EXP-{expense.pk}'
+        )
+        self.assertEqual(
+            transaction.transaction_type,
+            FinancialTransaction.TransactionType.EXPENSE,
+        )
+        self.assertEqual(transaction.amount, expense.amount)
+
+    def test_cancelled_expenses_are_excluded_from_dashboard_and_profit_loss(self):
+        self.create_expense(reference='ACTIVE-EXPENSE')
+        self.create_expense(
+            reference='CANCELLED-EXPENSE',
+            amount=Decimal('75.00'),
+            status=Expense.ExpenseStatus.CANCELLED,
+        )
+        self.client.force_login(self.user)
+
+        dashboard = self.client.get(reverse('finance:dashboard')).context
+        report = self.client.get(reverse('finance:report_profit_loss')).context
+
+        self.assertEqual(dashboard['total_expenses'], Decimal('125.00'))
+        self.assertEqual(report['expenses'], Decimal('125.00'))
 
     def test_different_sources_have_unique_deterministic_references(self):
         first_payment = self.create_payment()
