@@ -16,13 +16,13 @@
                 <span><strong>{{ user.username }}</strong><small>{% if user.is_superuser %}Administrator{% elif user.get_role_display %}{{ user.get_role_display }}{% else %}User{% endif %}</small></span>
             </li>
             <li>
-                <form class="logout-form" method="post" action="{% url 'accounts:logout' %}" style="display: inline; margin: 0;">
+                <form class="logout-form" method="post" action="{% url 'accounts:logout' %}">
                     {% csrf_token %}
-                    <button class="button button-quiet button-on-dark btn-logout" type="submit" style="background: transparent; border: none; color: #E2B0A6; cursor: pointer; font-size: 0.85rem; font-weight: 500; padding: 6px 10px;">Log out</button>
+                    <button class="button button-quiet button-on-dark btn-logout" type="submit">Log out</button>
                 </form>
             </li>
         {% else %}
-            <li><a href="{% url 'accounts:login' %}" class="btn btn-primary" style="padding: 6px 14px; font-size: 0.825rem;">Login</a></li>
+            <li><a href="{% url 'accounts:login' %}" class="btn btn-primary navbar-login">Login</a></li>
         {% endif %}
     </ul>
 </nav>

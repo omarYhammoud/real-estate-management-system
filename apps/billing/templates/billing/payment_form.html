@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% block title %}Record Payment | Keystone RMS{% endblock %}
 {% block content %}
-<div class="page-header"><div><h1>Record Payment</h1><p>Invoice {{ invoice.invoice_reference }} — outstanding {{ invoice.outstanding_balance }}</p></div></div>
-<section class="panel"><form method="post">{% csrf_token %}{{ form.as_p }}<div class="actions"><button class="btn btn-primary" type="submit">Record Payment</button><a class="btn btn-outline" href="{% url 'billing:invoice_detail' invoice.pk %}">Cancel</a></div></form></section>
+<div class="crumb"><a class="breadcrumb-link" href="{% url 'billing:invoice_detail' invoice.pk %}">Invoice {{ invoice.invoice_reference }}</a> / <b>Record Payment</b></div>
+<div class="page-header"><div><p class="eyebrow">Collections</p><h1>Record Payment</h1><p>Apply a payment securely to this invoice.</p></div></div>
+<section class="summary-strip" aria-label="Invoice payment summary"><div><span>Invoice</span><strong>{{ invoice.invoice_reference }}</strong></div><div><span>Outstanding balance</span><strong class="amount-outstanding">{{ invoice.outstanding_balance }}</strong></div></section>
+<section class="form-card"><form method="post" class="standard-form" novalidate>{% csrf_token %}{{ form.as_p }}<div class="form-actions"><a class="btn btn-outline" href="{% url 'billing:invoice_detail' invoice.pk %}">Cancel</a><button class="btn btn-primary" type="submit">Record Payment</button></div></form></section>
 {% endblock %}

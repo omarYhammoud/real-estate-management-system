@@ -2,18 +2,28 @@
 {% block title %}Account Home | Keystone RMS{% endblock %}
 
 {% block content %}
+<div class="crumb">Account / <b>Home</b></div>
 <div class="page-header">
     <div>
+        <p class="eyebrow">Workspace overview</p>
         <h1>Welcome, {{ user.get_full_name|default:user.username }}</h1>
-        <p>Your Keystone RMS account is active.</p>
+        <p>Your account is active and ready to use.</p>
     </div>
+    <span class="badge badge-success">{{ user.get_role_display }}</span>
 </div>
-<section class="panel">
-    <h3>Account</h3>
+<div class="account-grid">
+<section class="panel account-panel">
+    <p class="eyebrow">Profile</p><h3>Account details</h3>
     <div class="stat-line"><span class="k">Username</span><span class="v">{{ user.username }}</span></div>
-    <div class="stat-line"><span class="k">Role</span><span class="v">{{ user.get_role_display }}</span></div>
+    <div class="stat-line"><span class="k">Access role</span><span class="v">{{ user.get_role_display }}</span></div>
+</section>
+<section class="quick-action-card">
+    <p class="eyebrow">Quick access</p>
+    <h2>{% if user.role == 'tenant' and not user.is_superuser %}Tenant workspace{% else %}Portfolio dashboard{% endif %}</h2>
+    <p>{% if user.role == 'tenant' and not user.is_superuser %}Your account is ready. Tenant self-service features will appear here as they become available.{% else %}Open the operational and financial overview for your portfolio.{% endif %}</p>
     {% if user.role != 'tenant' or user.is_superuser %}
-    <div class="actions" style="margin-top: 16px;"><a href="{% url 'finance:dashboard' %}" class="btn btn-primary">Open Dashboard</a></div>
+    <div class="actions"><a href="{% url 'finance:dashboard' %}" class="btn btn-primary">Open Dashboard</a></div>
     {% endif %}
 </section>
+</div>
 {% endblock %}

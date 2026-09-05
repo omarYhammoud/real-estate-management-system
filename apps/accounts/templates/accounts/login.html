@@ -4,7 +4,15 @@
 {% block extra_css %}<link rel="stylesheet" href="{% static 'css/auth.css' %}">{% endblock %}
 {% block content %}
 <section class="auth-shell" aria-labelledby="auth-title">
-    <div class="auth-card">
+    <div class="auth-product-card">
+        <aside class="auth-story" aria-label="Keystone RMS introduction">
+            <span class="auth-story-mark" aria-hidden="true">KR</span>
+            <p class="eyebrow">Keystone RMS</p>
+            <h2>Property operations, brought into focus.</h2>
+            <p>A secure workspace for portfolio oversight, billing, maintenance, deposits, and financial reporting.</p>
+            <div class="auth-story-lines" aria-hidden="true"><span></span><span></span><span></span></div>
+        </aside>
+        <div class="auth-card">
         <div class="auth-heading">
             <span class="auth-mark" aria-hidden="true">KR</span>
             <p class="eyebrow">Secure workspace</p>
@@ -26,6 +34,7 @@
             <button class="button button-primary button-block" type="submit">Sign in to workspace</button>
         </form>
         <p class="auth-footer">Need an account? <a href="{% url 'accounts:register' %}">Create a tenant account</a></p>
+        </div>
     </div>
 </section>
 {% endblock %}
