@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}
+Tenants — Keystone RMS
+{% endblock %}
+
+{% block breadcrumb %}
+Portfolio / <b>Tenants</b>
+{% endblock %}
+
+{% block page_title %}
+Tenants
+{% endblock %}
+
+{% block content %}
+
+<div class="section-head">
+    <div>
+        <h2>Tenants</h2>
+        <p>Manage tenant profiles and review their rental history.</p>
+    </div>
+
+    <div class="actions">
+        <a
+            href="{% url 'properties:tenant_create' %}"
+            class="btn primary"
+        >
+            + Add Tenant
+        </a>
+    </div>
+</div>
+
+<div class="table-wrap">
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Identification Number</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for tenant in tenants %}
+
+            <tr>
+
+                <td>
+                    <strong>
+                        {{ tenant.full_name }}
+                    </strong>
+                </td>
+
+                <td>
+                    {{ tenant.email }}
+                </td>
+
+                <td>
+                    {{ tenant.phone }}
+                </td>
+
+                <td>
+                    {{ tenant.identification_number }}
+                </td>
+
+                <td>
+
+                    {% if tenant.status == "active" %}
+
+                        <span class="badge ok">
+                            Active
+                        </span>
+
+                    {% else %}
+
+                        <span class="badge neutral">
+                            {{ tenant.status }}
+                        </span>
+
+                    {% endif %}
+
+                </td>
+
+                <td>
+
+                    <a
+                        href="{% url 'properties:tenant_detail' tenant.pk %}"
+                        class="btn small"
+                    >
+                        View
+                    </a>
+
+                    <a
+                        href="{% url 'properties:tenant_update' tenant.pk %}"
+                        class="btn small"
+                    >
+                        Edit
+                    </a>
+
+                    <a
+                        href="{% url 'properties:tenant_delete' tenant.pk %}"
+                        class="btn small"
+                    >
+                        Delete
+                    </a>
+
+                </td>
+
+            </tr>
+
+            {% empty %}
+
+            <tr>
+                <td colspan="6">
+                    No tenants found.
+                </td>
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}
+Tenant Details — Keystone RMS
+{% endblock %}
+
+{% block breadcrumb %}
+Portfolio / Tenants / <b>{{ tenant.full_name }}</b>
+{% endblock %}
+
+{% block page_title %}
+Tenant Details
+{% endblock %}
+
+{% block content %}
+
+<div class="section-head">
+    <div>
+        <h2>{{ tenant.full_name }}</h2>
+        <p>Tenant profile and complete rental history.</p>
+    </div>
+
+    <div class="actions">
+        <a
+            href="{% url 'properties:tenant_update' tenant.pk %}"
+            class="btn"
+        >
+            Edit Tenant
+        </a>
+
+        <a
+            href="{% url 'properties:tenant_list' %}"
+            class="btn"
+        >
+            Back to Tenants
+        </a>
+    </div>
+</div>
+
+<div class="panel" style="margin-bottom: 20px;">
+    <h3>Tenant Information</h3>
+
+    <p>
+        <strong>Name:</strong>
+        {{ tenant.full_name }}
+    </p>
+
+    <p>
+        <strong>Email:</strong>
+        {{ tenant.email|default:"—" }}
+    </p>
+
+    <p>
+        <strong>Phone:</strong>
+        {{ tenant.phone|default:"—" }}
+    </p>
+
+    <p>
+        <strong>Identification Number:</strong>
+        {{ tenant.identification_number|default:"—" }}
+    </p>
+
+    <p>
+        <strong>Status:</strong>
+
+        {% if tenant.status == "active" %}
+            <span class="badge ok">
+                Active
+            </span>
+        {% else %}
+            <span class="badge neutral">
+                {{ tenant.status }}
+            </span>
+        {% endif %}
+    </p>
+</div>
+
+<div class="section-head">
+    <div>
+        <h2>Rental History</h2>
+        <p>All contracts linked to this tenant.</p>
+    </div>
+</div>
+
+<div class="table-wrap">
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Contract</th>
+                <th>Property</th>
+                <th>Unit</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Monthly Rent</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for contract in contracts %}
+
+            <tr>
+
+                <td>
+                    <a
+                        href="{% url 'properties:contract_detail' contract.pk %}"
+                        style="color: var(--accent-deep); font-weight: 600;"
+                    >
+                        {{ contract.contract_reference }}
+                    </a>
+                </td>
+
+                <td>
+                    {{ contract.unit.property.name }}
+                </td>
+
+                <td>
+                    {{ contract.unit.unit_number }}
+                </td>
+
+                <td>
+                    {{ contract.start_date }}
+                </td>
+
+                <td>
+                    {{ contract.end_date }}
+                </td>
+
+                <td>
+                    ${{ contract.monthly_rent }}
+                </td>
+
+                <td>
+
+                    {% if contract.status == "active" %}
+                        <span class="badge ok">
+                            Active
+                        </span>
+
+                    {% elif contract.status == "draft" %}
+                        <span class="badge neutral">
+                            Draft
+                        </span>
+
+                    {% elif contract.status == "expired" %}
+                        <span class="badge warn">
+                            Expired
+                        </span>
+
+                    {% else %}
+                        <span class="badge bad">
+                            {{ contract.get_status_display }}
+                        </span>
+                    {% endif %}
+
+                </td>
+
+            </tr>
+
+            {% empty %}
+
+            <tr>
+                <td colspan="7">
+                    This tenant has no rental history yet.
+                </td>
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}
