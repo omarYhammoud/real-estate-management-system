@@ -4,7 +4,7 @@
 <div class="crumb"><a class="breadcrumb-link" href="{% url 'billing:invoice_list' %}">Invoices</a> / <b>{{ invoice.invoice_reference }}</b></div>
 <header class="page-header">
     <div><h1>Invoice {{ invoice.invoice_reference }}</h1><p>Billing summary and recorded payment activity.</p></div>
-    <div class="actions"><a class="btn btn-primary" href="{% url 'billing:payment_create' invoice.pk %}">Record Payment</a><a class="btn btn-outline" href="{% url 'billing:invoice_list' %}">Back to Invoices</a></div>
+    <div class="actions">{% if user.role != 'tenant' or user.is_superuser %}<a class="btn btn-primary" href="{% url 'billing:payment_create' invoice.pk %}">Record Payment</a>{% endif %}<a class="btn btn-outline" href="{% url 'billing:invoice_list' %}">Back to Invoices</a></div>
 </header>
 <div class="kpi-row">
     <article class="kpi-card"><div class="lbl">Invoice Total</div><div class="val">{{ invoice.total_amount }}</div></article>

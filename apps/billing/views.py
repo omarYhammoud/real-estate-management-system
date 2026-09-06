@@ -3,6 +3,7 @@ Waad: build views for Rent Schedule, Invoices, Invoice Details, Create
 Invoice, Record Payment, Payment History, and Receipt here.
 """
 from django.contrib.auth import get_user_model
+from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -21,16 +22,35 @@ class BillingAccessMixin(RoleRequiredMixin):
     allowed_roles = (User.Role.ADMIN, User.Role.ACCOUNTANT)
 
 
-class InvoiceListView(BillingAccessMixin, ListView):
+class BillingReadAccessMixin(RoleRequiredMixin):
+    allowed_roles = (User.Role.ADMIN, User.Role.ACCOUNTANT, User.Role.TENANT)
+
+    def scope_to_current_tenant(self, queryset, tenant_lookup='tenant'):
+        if self.request.user.role != User.Role.TENANT:
+            return queryset
+        try:
+            tenant = self.request.user.tenant_profile
+        except User.tenant_profile.RelatedObjectDoesNotExist as exc:
+            raise PermissionDenied('No tenant profile is linked to this account.') from exc
+        return queryset.filter(**{tenant_lookup: tenant})
+
+
+class InvoiceListView(BillingReadAccessMixin, ListView):
     model = Invoice
     template_name = 'billing/invoice_list.html'
     context_object_name = 'invoices'
 
+    def get_queryset(self):
+        return self.scope_to_current_tenant(super().get_queryset())
 
-class InvoiceDetailView(BillingAccessMixin, DetailView):
+
+class InvoiceDetailView(BillingReadAccessMixin, DetailView):
     model = Invoice
     template_name = 'billing/invoice_detail.html'
     context_object_name = 'invoice'
+
+    def get_queryset(self):
+        return self.scope_to_current_tenant(super().get_queryset())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -69,24 +89,26 @@ class PaymentCreateView(BillingAccessMixin, CreateView):
         return reverse('billing:receipt_detail', kwargs={'pk': self.object.receipt.pk})
 
 
-class PaymentHistoryView(BillingAccessMixin, ListView):
+class PaymentHistoryView(BillingReadAccessMixin, ListView):
     model = Payment
     template_name = 'billing/payment_history.html'
     context_object_name = 'payments'
     paginate_by = 20
 
     def get_queryset(self):
-        return super().get_queryset().select_related(
+        queryset = super().get_queryset().select_related(
             'invoice', 'tenant', 'recorded_by', 'receipt'
-        ).order_by('-payment_date', '-pk')
+        )
+        return self.scope_to_current_tenant(queryset).order_by('-payment_date', '-pk')
 
 
-class ReceiptDetailView(BillingAccessMixin, DetailView):
+class ReceiptDetailView(BillingReadAccessMixin, DetailView):
     model = Receipt
     template_name = 'billing/receipt_detail.html'
     context_object_name = 'receipt'
 
     def get_queryset(self):
-        return super().get_queryset().select_related(
+        queryset = super().get_queryset().select_related(
             'payment__invoice', 'payment__tenant', 'payment__recorded_by'
         )
+        return self.scope_to_current_tenant(queryset, 'payment__tenant')

@@ -245,7 +245,6 @@ class BillingModelTests(TestCase):
             (User.Role.ACCOUNTANT, 200),
             (User.Role.PROPERTY_MANAGER, 403),
             (User.Role.OWNER, 403),
-            (User.Role.TENANT, 403),
         ):
             with self.subTest(role=role):
                 user = User.objects.create(username=f'matrix-{role}', role=role)
@@ -256,3 +255,141 @@ class BillingModelTests(TestCase):
 
         for url in urls:
             self.assertEqual(self.client.get(url).status_code, 302)
+
+
+class TenantBillingAccessTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.tenant_user = User.objects.create_user(
+            username='tenant-self-service',
+            password='test-password',
+            role=User.Role.TENANT,
+        )
+        owner = Owner.objects.create(full_name='Billing Access Owner')
+        property_object = Property.objects.create(
+            owner=owner,
+            name='Billing Access Property',
+            address='Address',
+            property_type=Property.PropertyType.RESIDENTIAL,
+        )
+        unit = Unit.objects.create(
+            property=property_object,
+            unit_number='ACCESS-1',
+            rent_amount=Decimal('1000.00'),
+        )
+        other_unit = Unit.objects.create(
+            property=property_object,
+            unit_number='ACCESS-2',
+            rent_amount=Decimal('900.00'),
+        )
+        cls.tenant = Tenant.objects.create(
+            user=cls.tenant_user,
+            full_name='Linked Tenant',
+        )
+        cls.other_tenant = Tenant.objects.create(full_name='Other Tenant')
+        contract = RentalContract.objects.create(
+            tenant=cls.tenant,
+            unit=unit,
+            contract_reference='TENANT-ACCESS-CONTRACT',
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 12, 31),
+            monthly_rent=Decimal('1000.00'),
+        )
+        other_contract = RentalContract.objects.create(
+            tenant=cls.other_tenant,
+            unit=other_unit,
+            contract_reference='OTHER-ACCESS-CONTRACT',
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 12, 31),
+            monthly_rent=Decimal('900.00'),
+        )
+        cls.invoice = Invoice.objects.create(
+            contract=contract,
+            tenant=cls.tenant,
+            invoice_reference='TENANT-ACCESS-INVOICE',
+            issue_date=date(2026, 1, 1),
+            due_date=date(2026, 1, 10),
+            total_amount=Decimal('1000.00'),
+        )
+        cls.other_invoice = Invoice.objects.create(
+            contract=other_contract,
+            tenant=cls.other_tenant,
+            invoice_reference='OTHER-ACCESS-INVOICE',
+            issue_date=date(2026, 1, 1),
+            due_date=date(2026, 1, 10),
+            total_amount=Decimal('900.00'),
+        )
+        actor = User.objects.create(username='billing-actor', role=User.Role.ACCOUNTANT)
+        cls.payment = Payment.objects.create(
+            invoice=cls.invoice,
+            tenant=cls.tenant,
+            recorded_by=actor,
+            payment_reference='TENANT-ACCESS-PAYMENT',
+            payment_date=date(2026, 1, 5),
+            amount=Decimal('100.00'),
+            payment_method=Payment.Method.CASH,
+        )
+        cls.other_payment = Payment.objects.create(
+            invoice=cls.other_invoice,
+            tenant=cls.other_tenant,
+            recorded_by=actor,
+            payment_reference='OTHER-ACCESS-PAYMENT',
+            payment_date=date(2026, 1, 5),
+            amount=Decimal('100.00'),
+            payment_method=Payment.Method.CASH,
+        )
+        cls.receipt = Receipt.objects.create(
+            payment=cls.payment,
+            receipt_reference='TENANT-ACCESS-RECEIPT',
+            receipt_date=date(2026, 1, 5),
+            amount=cls.payment.amount,
+        )
+        cls.other_receipt = Receipt.objects.create(
+            payment=cls.other_payment,
+            receipt_reference='OTHER-ACCESS-RECEIPT',
+            receipt_date=date(2026, 1, 5),
+            amount=cls.other_payment.amount,
+        )
+
+    def setUp(self):
+        self.client.force_login(self.tenant_user)
+
+    def test_tenant_invoice_list_and_detail_are_scoped(self):
+        response = self.client.get(reverse('billing:invoice_list'))
+        self.assertContains(response, self.invoice.invoice_reference)
+        self.assertNotContains(response, self.other_invoice.invoice_reference)
+        self.assertEqual(
+            self.client.get(reverse('billing:invoice_detail', args=[self.invoice.pk])).status_code,
+            200,
+        )
+        self.assertEqual(
+            self.client.get(reverse('billing:invoice_detail', args=[self.other_invoice.pk])).status_code,
+            404,
+        )
+
+    def test_tenant_payment_history_and_receipt_are_scoped(self):
+        response = self.client.get(reverse('billing:payment_history'))
+        self.assertContains(response, self.payment.payment_reference)
+        self.assertNotContains(response, self.other_payment.payment_reference)
+        self.assertEqual(
+            self.client.get(reverse('billing:receipt_detail', args=[self.receipt.pk])).status_code,
+            200,
+        )
+        self.assertEqual(
+            self.client.get(reverse('billing:receipt_detail', args=[self.other_receipt.pk])).status_code,
+            404,
+        )
+
+    def test_tenant_cannot_record_payment(self):
+        self.assertEqual(
+            self.client.get(
+                reverse('billing:payment_create', kwargs={'invoice_pk': self.invoice.pk})
+            ).status_code,
+            403,
+        )
+
+    def test_unlinked_tenant_fails_safely(self):
+        self.client.force_login(User.objects.create_user(
+            username='unlinked-tenant', role=User.Role.TENANT
+        ))
+        self.assertEqual(self.client.get(reverse('billing:invoice_list')).status_code, 403)

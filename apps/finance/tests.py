@@ -31,6 +31,8 @@ class DashboardAuthorizationTests(TestCase):
                     password='test-password',
                     role=role,
                 )
+                if role == User.Role.OWNER:
+                    Owner.objects.create(user=user, full_name='Authorized Owner')
                 self.client.force_login(user)
                 response = self.client.get(reverse('finance:dashboard'))
                 self.assertEqual(response.status_code, 200)
@@ -322,6 +324,8 @@ class FinancialReportTests(TestCase):
         for role in (User.Role.ADMIN, User.Role.ACCOUNTANT, User.Role.OWNER):
             with self.subTest(role=role):
                 user = User.objects.create_user(username=f'authorized-{role}', role=role)
+                if role == User.Role.OWNER:
+                    Owner.objects.create(user=user, full_name='Report Authorized Owner')
                 self.client.force_login(user)
                 self.assertEqual(self.client.get(reverse('finance:reports')).status_code, 200)
                 self.client.logout()
@@ -1026,3 +1030,75 @@ class LedgerSynchronizationTests(TestCase):
                 f'EXP-{expense.pk}',
             },
         )
+
+
+class FinanceOwnershipScopeTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.owner_user = User.objects.create_user(username='scoped-owner', role=User.Role.OWNER)
+        cls.owner = Owner.objects.create(user=cls.owner_user, full_name='Scoped Owner')
+        cls.other_owner = Owner.objects.create(full_name='Other Owner')
+        cls.property = Property.objects.create(owner=cls.owner, name='Scoped Property', address='Scoped Address', property_type=Property.PropertyType.RESIDENTIAL)
+        cls.other_property = Property.objects.create(owner=cls.other_owner, name='Other Property', address='Other Address', property_type=Property.PropertyType.COMMERCIAL)
+        cls.unit = Unit.objects.create(property=cls.property, unit_number='OWN-1', rent_amount=Decimal('1000.00'), status=Unit.Status.OCCUPIED)
+        cls.other_unit = Unit.objects.create(property=cls.other_property, unit_number='OTHER-1', rent_amount=Decimal('2000.00'), status=Unit.Status.OCCUPIED)
+        cls.tenant_user = User.objects.create_user(username='scoped-tenant', role=User.Role.TENANT)
+        cls.tenant = Tenant.objects.create(user=cls.tenant_user, full_name='Scoped Tenant')
+        cls.other_tenant = Tenant.objects.create(full_name='Other Tenant')
+        cls.contract = RentalContract.objects.create(tenant=cls.tenant, unit=cls.unit, contract_reference='OWN-CONTRACT', start_date=date(2026, 1, 1), end_date=date(2026, 12, 31), monthly_rent=Decimal('1000.00'), status=RentalContract.Status.ACTIVE)
+        cls.other_contract = RentalContract.objects.create(tenant=cls.other_tenant, unit=cls.other_unit, contract_reference='OTHER-OWNER-CONTRACT', start_date=date(2026, 1, 1), end_date=date(2026, 12, 31), monthly_rent=Decimal('2000.00'), status=RentalContract.Status.ACTIVE)
+        cls.invoice = Invoice.objects.create(contract=cls.contract, tenant=cls.tenant, invoice_reference='OWN-INVOICE', issue_date=date(2026, 1, 1), due_date=date(2026, 1, 10), total_amount=Decimal('1000.00'))
+        cls.other_invoice = Invoice.objects.create(contract=cls.other_contract, tenant=cls.other_tenant, invoice_reference='OTHER-OWNER-INVOICE', issue_date=date(2026, 1, 1), due_date=date(2026, 1, 10), total_amount=Decimal('2000.00'))
+        accountant = User.objects.create_user(username='scope-accountant', role=User.Role.ACCOUNTANT)
+        cls.payment = Payment.objects.create(invoice=cls.invoice, tenant=cls.tenant, recorded_by=accountant, payment_reference='OWN-PAYMENT', payment_date=date(2026, 1, 5), amount=Decimal('400.00'), payment_method=Payment.Method.CASH)
+        cls.other_payment = Payment.objects.create(invoice=cls.other_invoice, tenant=cls.other_tenant, recorded_by=accountant, payment_reference='OTHER-OWNER-PAYMENT', payment_date=date(2026, 1, 5), amount=Decimal('800.00'), payment_method=Payment.Method.CASH)
+        Expense.objects.create(property=cls.property, recorded_by=accountant, expense_reference='OWN-EXPENSE', category=Expense.Category.MAINTENANCE, amount=Decimal('100.00'), expense_date=date(2026, 1, 6))
+        Expense.objects.create(property=cls.other_property, recorded_by=accountant, expense_reference='OTHER-OWNER-EXPENSE', category=Expense.Category.MAINTENANCE, amount=Decimal('300.00'), expense_date=date(2026, 1, 6))
+
+    def test_owner_dashboard_is_scoped_to_owned_properties(self):
+        self.client.force_login(self.owner_user)
+        context = self.client.get(reverse('finance:dashboard')).context
+        self.assertEqual(context['total_properties'], 1)
+        self.assertEqual(context['total_units'], 1)
+        self.assertEqual(context['active_contracts'], 1)
+        self.assertEqual(context['revenue'], Decimal('400.00'))
+        self.assertEqual(context['total_expenses'], Decimal('100.00'))
+        self.assertEqual(context['outstanding_rent'], Decimal('600.00'))
+
+    def test_owner_reports_exclude_other_owner_data(self):
+        self.client.force_login(self.owner_user)
+        self.assertEqual(self.client.get(reverse('finance:report_revenue')).context['total_revenue'], Decimal('400.00'))
+        self.assertEqual(self.client.get(reverse('finance:report_expenses')).context['total_expenses'], Decimal('100.00'))
+        self.assertEqual(self.client.get(reverse('finance:report_receivables')).context['total_outstanding'], Decimal('600.00'))
+        self.assertEqual(self.client.get(reverse('finance:report_payments')).context['total_payments'], Decimal('400.00'))
+        response = self.client.get(reverse('finance:report_transactions'))
+        self.assertEqual(response.context['transaction_count'], 2)
+        self.assertNotContains(response, f'PAY-{self.other_payment.pk}')
+
+    def test_owner_property_filter_cannot_select_other_owner_property(self):
+        self.client.force_login(self.owner_user)
+        response = self.client.get(reverse('finance:report_property_performance'), {'property': self.other_property.pk})
+        self.assertFalse(response.context['filter_form'].is_valid())
+        self.assertEqual([row['property'] for row in response.context['property_rows']], [self.property])
+
+    def test_tenant_statement_forces_linked_tenant(self):
+        self.client.force_login(self.tenant_user)
+        response = self.client.get(reverse('finance:report_tenant_statement'), {'tenant': self.other_tenant.pk})
+        self.assertEqual(response.context['selected_tenant'], self.tenant)
+        self.assertContains(response, self.invoice.invoice_reference)
+        self.assertNotContains(response, self.other_invoice.invoice_reference)
+
+    def test_unlinked_owner_and_tenant_fail_safely(self):
+        self.client.force_login(User.objects.create_user(username='unlinked-owner', role=User.Role.OWNER))
+        self.assertEqual(self.client.get(reverse('finance:dashboard')).status_code, 403)
+        self.client.force_login(User.objects.create_user(username='unlinked-statement-tenant', role=User.Role.TENANT))
+        self.assertEqual(self.client.get(reverse('finance:report_tenant_statement')).status_code, 403)
+
+    def test_admin_and_accountant_still_see_global_finance_data(self):
+        for role in (User.Role.ADMIN, User.Role.ACCOUNTANT):
+            with self.subTest(role=role):
+                self.client.force_login(User.objects.create_user(username=f'global-{role}', role=role))
+                context = self.client.get(reverse('finance:dashboard')).context
+                self.assertEqual(context['total_properties'], 2)
+                self.assertEqual(context['revenue'], Decimal('1200.00'))
+                self.client.logout()

@@ -1,5 +1,6 @@
 from builtins import property as python_property
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
@@ -16,6 +17,14 @@ class Owner(TimeStampedModel):
     class Status(models.TextChoices):
         ACTIVE = "active", "Active"
         INACTIVE = "inactive", "Inactive"
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="owner_profile",
+    )
 
     full_name = models.CharField(
         max_length=255
@@ -39,6 +48,15 @@ class Owner(TimeStampedModel):
         choices=Status.choices,
         default=Status.ACTIVE
     )
+
+    def clean(self):
+        super().clean()
+        if (
+            self.user_id
+            and not self.user.is_superuser
+            and self.user.role != "owner"
+        ):
+            raise ValidationError({"user": "The linked user must have the Owner role."})
 
     def __str__(self):
         return self.full_name
@@ -173,6 +191,14 @@ class Tenant(TimeStampedModel):
         ACTIVE = "active", "Active"
         INACTIVE = "inactive", "Inactive"
 
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="tenant_profile",
+    )
+
     full_name = models.CharField(
         max_length=255
     )
@@ -196,6 +222,15 @@ class Tenant(TimeStampedModel):
         choices=Status.choices,
         default=Status.ACTIVE
     )
+
+    def clean(self):
+        super().clean()
+        if (
+            self.user_id
+            and not self.user.is_superuser
+            and self.user.role != "tenant"
+        ):
+            raise ValidationError({"user": "The linked user must have the Tenant role."})
 
     def __str__(self):
         return self.full_name

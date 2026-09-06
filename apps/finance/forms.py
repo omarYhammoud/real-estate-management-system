@@ -32,6 +32,14 @@ class TenantStatementFilterForm(DateRangeForm):
         empty_label='Select a tenant',
     )
 
+    def __init__(self, *args, tenant_queryset=None, fixed_tenant=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if tenant_queryset is not None:
+            self.fields['tenant'].queryset = tenant_queryset
+        if fixed_tenant is not None:
+            self.fields['tenant'].initial = fixed_tenant
+            self.fields['tenant'].widget = forms.HiddenInput()
+
 
 class PropertyPerformanceFilterForm(DateRangeForm):
     property = forms.ModelChoiceField(
@@ -39,3 +47,8 @@ class PropertyPerformanceFilterForm(DateRangeForm):
         required=False,
         empty_label='All properties',
     )
+
+    def __init__(self, *args, property_queryset=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if property_queryset is not None:
+            self.fields['property'].queryset = property_queryset

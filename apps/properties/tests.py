@@ -1,9 +1,43 @@
 from datetime import date
 
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from .models import Owner, Property, Unit, Tenant, RentalContract
+
+
+User = get_user_model()
+
+
+class UserProfileRelationshipTests(TestCase):
+    def test_tenant_can_link_to_tenant_role_user(self):
+        user = User.objects.create_user(username='linked-tenant', role=User.Role.TENANT)
+        tenant = Tenant(user=user, full_name='Linked Tenant')
+        tenant.full_clean()
+        tenant.save()
+        self.assertEqual(user.tenant_profile, tenant)
+
+    def test_owner_can_link_to_owner_role_user(self):
+        user = User.objects.create_user(username='linked-owner', role=User.Role.OWNER)
+        owner = Owner(user=user, full_name='Linked Owner')
+        owner.full_clean()
+        owner.save()
+        self.assertEqual(user.owner_profile, owner)
+
+    def test_unlinked_profiles_remain_valid(self):
+        tenant = Tenant(full_name='Unlinked Tenant')
+        owner = Owner(full_name='Unlinked Owner')
+        tenant.full_clean()
+        owner.full_clean()
+
+    def test_profile_role_mismatch_is_rejected(self):
+        tenant_user = User.objects.create_user(username='wrong-owner', role=User.Role.TENANT)
+        owner_user = User.objects.create_user(username='wrong-tenant', role=User.Role.OWNER)
+        with self.assertRaises(ValidationError):
+            Owner(user=tenant_user, full_name='Wrong Owner').full_clean()
+        with self.assertRaises(ValidationError):
+            Tenant(user=owner_user, full_name='Wrong Tenant').full_clean()
 
 
 class PropertyRentalTests(TestCase):
