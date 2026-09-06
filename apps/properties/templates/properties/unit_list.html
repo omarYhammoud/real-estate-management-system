@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}
+Units — Keystone RMS
+{% endblock %}
+
+{% block breadcrumb %}
+Portfolio / <b>Units</b>
+{% endblock %}
+
+{% block page_title %}
+Units
+{% endblock %}
+
+
+{% block content %}
+
+<div class="section-head">
+
+    <div>
+
+        <h2>
+            Property Units
+        </h2>
+
+        <p>
+            Manage rental units and monitor their current status.
+        </p>
+
+    </div>
+
+
+    <div class="actions">
+
+        <a
+            href="{% url 'properties:unit_create' %}"
+            class="btn primary"
+        >
+            + Add Unit
+        </a>
+
+    </div>
+
+</div>
+
+
+
+<div class="table-wrap">
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>
+                    Property
+                </th>
+
+                <th>
+                    Unit
+                </th>
+
+                <th>
+                    Type
+                </th>
+
+                <th>
+                    Size Details
+                </th>
+
+                <th>
+                    Rent
+                </th>
+
+                <th>
+                    Status
+                </th>
+
+                <th>
+                    Actions
+                </th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+            {% for unit in units %}
+
+                <tr>
+
+                    <td>
+                        {{ unit.property.name }}
+                    </td>
+
+
+                    <td>
+                        {{ unit.unit_number }}
+                    </td>
+
+
+                    <td>
+                        {{ unit.unit_type|default:"—" }}
+                    </td>
+
+
+                    <td>
+                        {{ unit.size_details|default:"—" }}
+                    </td>
+
+
+                    <td>
+                        ${{ unit.rent_amount }}
+                    </td>
+
+
+                    <td>
+
+                        {% if unit.status == "maintenance" %}
+
+                            <span class="badge bad">
+                                Under Maintenance
+                            </span>
+
+                        {% elif unit.is_currently_occupied %}
+
+                            <span class="badge warn">
+                                Occupied
+                            </span>
+
+                        {% else %}
+
+                            <span class="badge ok">
+                                Vacant
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <td>
+
+                        <div class="actions">
+
+                            <a
+                                href="{% url 'properties:unit_update' unit.pk %}"
+                                class="btn small"
+                            >
+                                Edit
+                            </a>
+
+
+                            <a
+                                href="{% url 'properties:unit_delete' unit.pk %}"
+                                class="btn small"
+                            >
+                                Delete
+                            </a>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+
+            {% empty %}
+
+                <tr>
+
+                    <td colspan="7">
+
+                        No units found.
+
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}
