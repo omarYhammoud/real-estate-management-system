@@ -164,7 +164,7 @@ class Payment(TimeStampedModel):
 
     invoice = models.ForeignKey(Invoice, on_delete=models.PROTECT, related_name='payments')
     tenant = models.ForeignKey(Tenant, on_delete=models.PROTECT, related_name='payments')
-    recorded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='recorded_payments')
+    recorded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='recorded_payments')
     payment_reference = models.CharField(max_length=50, unique=True)
     payment_date = models.DateField()
     amount = models.DecimalField(max_digits=12, decimal_places=2)
