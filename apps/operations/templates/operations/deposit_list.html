@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Security Deposits — Keystone RMS{% endblock %}
+
+{% block content %}
+<div class="crumb">Operations / <b>Security Deposits</b></div>
+
+<div class="page-header">
+    <div>
+        <h1>Security Deposits Ledger</h1>
+        <p>Tenant escrow deposits held, deductions authorized, and refunds processed across active contracts.</p>
+    </div>
+    <div class="actions">
+        <a href="{% url 'operations:deduction_list' %}" class="btn btn-outline">Deductions</a>
+        <a href="{% url 'operations:refund_list' %}" class="btn btn-outline">Refunds</a>
+        <a href="{% url 'operations:deposit_create' %}" class="btn btn-primary">+ Record Deposit</a>
+    </div>
+</div>
+
+<div class="table-card">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Contract &amp; Tenant</th>
+                <th>Required</th>
+                <th>Received</th>
+                <th>Remaining Balance</th>
+                <th>Status</th>
+                <th>Received Date</th>
+                <th style="text-align: right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for deposit in deposits %}
+            <tr>
+                <td>
+                    <a href="{% url 'operations:deposit_detail' deposit.pk %}" style="font-weight: 600; color: var(--accent-deep); font-family: var(--font-mono);">
+                        {{ deposit.contract.contract_reference }}
+                    </a>
+                    <div class="cell-sub">
+                        {{ deposit.contract.tenant.full_name }}{% if deposit.contract.unit %} — {{ deposit.contract.unit }}{% endif %}
+                    </div>
+                </td>
+                <td class="money">${{ deposit.required_amount }}</td>
+                <td class="money">${{ deposit.received_amount }}</td>
+                <td class="money">
+                    <strong style="color: {% if deposit.remaining_balance > 0 %}var(--status-ok){% else %}var(--ink-faint){% endif %};">
+                        ${{ deposit.remaining_balance }}
+                    </strong>
+                </td>
+                <td>
+                    <span class="badge badge-{{ deposit.status }}">{{ deposit.get_status_display }}</span>
+                </td>
+                <td class="font-mono">{{ deposit.received_date|default:"—" }}</td>
+                <td style="text-align: right;">
+                    <div class="actions" style="justify-content: flex-end;">
+                        <a href="{% url 'operations:deposit_detail' deposit.pk %}" class="btn btn-secondary btn-small">View Ledger</a>
+                        <a href="{% url 'operations:deposit_edit' deposit.pk %}" class="btn btn-outline btn-small">Edit</a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7">
+                    <div class="empty-state">
+                        <div class="glyph">🔒</div>
+                        <div class="t">No Security Deposits Recorded</div>
+                        <p class="sub">There are no deposit records currently registered in the ledger.</p>
+                        <div style="margin-top: 14px;">
+                            <a href="{% url 'operations:deposit_create' %}" class="btn btn-primary btn-small">+ Record First Deposit</a>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if deposits %}
+    <div class="table-toolbar-note">
+        Showing {{ deposits|length }} record{{ deposits|length|pluralize }} in ledger
+    </div>
+    {% endif %}
+</div>
+
+{% if is_paginated %}
+<div class="pagination">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">← Previous</a>{% endif %}
+    <span>Page {{ page_obj.number }} of {{ page_obj.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Next →</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

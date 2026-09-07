@@ -1,0 +1,8 @@
+{% extends 'finance/reports/base_report.html' %}{% load humanize %}
+{% block title %}Revenue Summary{% endblock %}{% block report_title %}Revenue Summary{% endblock %}
+{% block report_description %}Rental-income ledger transactions only; deposits are excluded.{% endblock %}
+{% block report_filter %}{% include 'finance/reports/_filter.html' %}{% endblock %}
+{% block report_content %}
+<section class="report-summary-grid"><article><span>Total Rental Revenue</span><strong>{{ total_revenue|floatformat:2|intcomma }}</strong></article><article><span>Transactions</span><strong>{{ transaction_count|intcomma }}</strong></article></section>
+<section class="report-panel"><h2>Revenue Transactions</h2>{% if transactions %}<div class="table-scroll"><table class="report-table"><thead><tr><th>Reference</th><th>Date</th><th>Amount</th><th>Recorded by</th></tr></thead><tbody>{% for item in transactions %}<tr><td>{{ item.transaction_reference }}</td><td>{{ item.transaction_date }}</td><td>{{ item.amount|floatformat:2|intcomma }}</td><td>{{ item.recorded_by|default:'—' }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="report-empty">No rental revenue matches these filters.</p>{% endif %}</section>
+{% endblock %}

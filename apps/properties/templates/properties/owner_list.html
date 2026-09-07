@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}
+Owners — Keystone RMS
+{% endblock %}
+
+{% block breadcrumb %}
+Portfolio / <b>Owners</b>
+{% endblock %}
+
+{% block page_title %}
+Owners
+{% endblock %}
+
+{% block content %}
+
+<div class="section-head">
+    <div>
+        <h2>Property Owners</h2>
+        <p>Manage owners and the properties registered under them.</p>
+    </div>
+
+    <div class="actions">
+        <a
+            href="{% url 'properties:owner_create' %}"
+            class="btn primary"
+        >
+            + Add Owner
+        </a>
+    </div>
+</div>
+
+<div class="table-wrap">
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for owner in owners %}
+
+            <tr>
+
+                <td>
+                    <strong>
+                        {{ owner.full_name }}
+                    </strong>
+                </td>
+
+                <td>
+                    {{ owner.email }}
+                </td>
+
+                <td>
+                    {{ owner.phone }}
+                </td>
+
+                <td>
+
+                    {% if owner.status == "active" %}
+
+                        <span class="badge ok">
+                            Active
+                        </span>
+
+                    {% else %}
+
+                        <span class="badge neutral">
+                            {{ owner.status }}
+                        </span>
+
+                    {% endif %}
+
+                </td>
+
+                <td>
+
+                    <a
+                        href="{% url 'properties:owner_update' owner.pk %}"
+                        class="btn small"
+                    >
+                        Edit
+                    </a>
+
+                    <a
+                        href="{% url 'properties:owner_delete' owner.pk %}"
+                        class="btn small"
+                    >
+                        Delete
+                    </a>
+
+                </td>
+
+            </tr>
+
+            {% empty %}
+
+            <tr>
+                <td colspan="5">
+                    No owners found.
+                </td>
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

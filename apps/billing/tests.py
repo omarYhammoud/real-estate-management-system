@@ -14,6 +14,11 @@ from datetime import date
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
+from datetime import date
+from decimal import Decimal
+
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from apps.properties.models import Owner, Property, RentalContract, Tenant, Unit

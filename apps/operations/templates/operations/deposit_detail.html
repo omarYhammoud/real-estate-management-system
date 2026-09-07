@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% block title %}Deposit Ledger — {{ deposit.contract.contract_reference }} | Keystone RMS{% endblock %}
+
+{% block content %}
+<div class="crumb">
+    <a href="{% url 'operations:deposit_list' %}" class="breadcrumb-link">Operations</a> /
+    <a href="{% url 'operations:deposit_list' %}" class="breadcrumb-link">Security Deposits</a> /
+    <b>{{ deposit.contract.contract_reference }}</b>
+</div>
+
+<div class="page-header">
+    <div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <h1>Security Deposit: {{ deposit.contract.contract_reference }}</h1>
+            <span class="badge badge-{{ deposit.status }}">{{ deposit.get_status_display }}</span>
+        </div>
+        <p>Tenant: <strong>{{ deposit.contract.tenant }}</strong> &bull; Unit: <strong>{{ deposit.contract.unit|default:"General / Unassigned" }}</strong></p>
+    </div>
+    <div class="actions">
+        <a href="{% url 'operations:deposit_edit' deposit.pk %}" class="btn btn-secondary">Edit Deposit</a>
+        <a href="{% url 'operations:deposit_list' %}" class="btn btn-outline">← All Deposits</a>
+    </div>
+</div>
+
+<div class="grid-2">
+    <!-- Left: Contract & Escrow Details -->
+    <div class="panel">
+        <h3>Deposit Information <span class="muted">— Contract &amp; Escrow Details</span></h3>
+        <div class="stat-line">
+            <span class="k">Contract Reference</span>
+            <span class="v">{{ deposit.contract.contract_reference }}</span>
+        </div>
+        <div class="stat-line">
+            <span class="k">Tenant Name</span>
+            <span class="v">{{ deposit.contract.tenant.full_name }}</span>
+        </div>
+        <div class="stat-line">
+            <span class="k">Assigned Unit</span>
+            <span class="v">{{ deposit.contract.unit|default:"—" }}</span>
+        </div>
+        <div class="stat-line">
+            <span class="k">Date Received</span>
+            <span class="v">{{ deposit.received_date|default:"Pending Receipt" }}</span>
+        </div>
+        <div class="stat-line">
+            <span class="k">Escrow Status</span>
+            <span class="v"><span class="badge badge-{{ deposit.status }}">{{ deposit.get_status_display }}</span></span>
+        </div>
+        <div class="stat-line">
+            <span class="k">Contract Term</span>
+            <span class="v">{{ deposit.contract.start_date }} &ndash; {{ deposit.contract.end_date }}</span>
+        </div>
+    </div>
+
+    <!-- Right: Financial Ledger Summary & Balance -->
+    <div class="panel">
+        <h3>Escrow Ledger Summary <span class="muted">— Balance Breakdown</span></h3>
+        <div class="stat-line">
+            <span class="k">Required Deposit Amount</span>
+            <span class="v">${{ deposit.required_amount }}</span>
+        </div>
+        <div class="stat-line">
+            <span class="k">Total Received to Date</span>
+            <span class="v pos">${{ deposit.received_amount }}</span>
+        </div>
+        <div class="stat-line">
+            <span class="k">Deductions Applied</span>
+            <span class="v neg">{{ deductions|length }} record{{ deductions|length|pluralize }}</span>
+        </div>
+        <div class="stat-line">
+            <span class="k">Refunds Processed</span>
+            <span class="v">{{ refunds|length }} record{{ refunds|length|pluralize }}</span>
+        </div>
+
+        <div style="margin-top: 18px;">
+            <div class="balance-row">
+                <span class="label">Available Remaining Balance</span>
+                <span class="balance-amount {% if deposit.remaining_balance > 0 %}pos{% endif %}">
+                    ${{ deposit.remaining_balance }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Deductions Section -->
+<div class="section-header">
+    <div>
+        <h2>Deductions</h2>
+        <p>Authorized charges deducted from this deposit for repairs, maintenance, or arrears.</p>
+    </div>
+    <div class="actions">
+        {% if deposit.remaining_balance > 0 %}
+        <a href="{% url 'operations:deduction_add' deposit.pk %}" class="btn btn-primary btn-small">+ Add Deduction</a>
+        {% else %}
+        <button class="btn btn-secondary btn-small" disabled title="No remaining balance available for deductions" style="opacity: 0.6; cursor: not-allowed;">+ Add Deduction (No Balance)</button>
+        {% endif %}
+    </div>
+</div>
+
+<div class="table-card">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Deduction Date</th>
+                <th>Amount</th>
+                <th>Reason / Description</th>
+                <th>Authorized By</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in deductions %}
+            <tr>
+                <td class="font-mono">{{ d.deduction_date }}</td>
+                <td class="money">
+                    <strong style="color: var(--status-bad); font-family: var(--font-mono);">&minus;${{ d.amount }}</strong>
+                </td>
+                <td>{{ d.reason }}</td>
+                <td>
+                    {% if d.authorized_by %}
+                        <span class="badge-cat">{{ d.authorized_by.username }}</span>
+                    {% else %}
+                        <span class="muted">—</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">
+                    <div class="empty-state" style="padding: 24px;">
+                        <div class="t" style="font-size: 12.5px;">No Deductions Recorded</div>
+                        <p class="sub">No deductions have been charged against this security deposit.</p>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Refunds Section -->
+<div class="section-header">
+    <div>
+        <h2>Refunds</h2>
+        <p>Disbursements returned to the tenant from the escrow deposit.</p>
+    </div>
+    <div class="actions">
+        {% if deposit.remaining_balance > 0 %}
+        <a href="{% url 'operations:refund_add' deposit.pk %}" class="btn btn-primary btn-small">+ Add Refund</a>
+        {% else %}
+        <button class="btn btn-secondary btn-small" disabled title="No remaining balance available for refunds" style="opacity: 0.6; cursor: not-allowed;">+ Add Refund (No Balance)</button>
+        {% endif %}
+    </div>
+</div>
+
+<div class="table-card">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Refund Date</th>
+                <th>Amount</th>
+                <th>Payment Method</th>
+                <th>Reference #</th>
+                <th>Authorized By</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in refunds %}
+            <tr>
+                <td class="font-mono">{{ r.refund_date }}</td>
+                <td class="money">
+                    <strong style="color: var(--status-ok); font-family: var(--font-mono);">${{ r.amount }}</strong>
+                </td>
+                <td>{{ r.refund_method|default:"Standard" }}</td>
+                <td>
+                    <code style="font-family: var(--font-mono); background: var(--panel-alt); padding: 2px 6px; border: 1px solid var(--line-soft); border-radius: 2px; color: var(--accent-deep); font-size: 11.5px;">{{ r.refund_reference }}</code>
+                </td>
+                <td>
+                    {% if r.authorized_by %}
+                        <span class="badge-cat">{{ r.authorized_by.username }}</span>
+                    {% else %}
+                        <span class="muted">—</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">
+                    <div class="empty-state" style="padding: 24px;">
+                        <div class="t" style="font-size: 12.5px;">No Refunds Recorded</div>
+                        <p class="sub">No refunds have been processed yet for this deposit.</p>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

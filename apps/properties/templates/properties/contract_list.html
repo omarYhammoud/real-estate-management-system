@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}
+Rental Contracts — Keystone RMS
+{% endblock %}
+
+{% block breadcrumb %}
+Leasing / <b>Rental Contracts</b>
+{% endblock %}
+
+{% block page_title %}
+Rental Contracts
+{% endblock %}
+
+{% block content %}
+
+<div class="section-head">
+    <div>
+        <h2>Rental Contracts</h2>
+        <p>Manage active, draft, expired, and terminated tenancy contracts.</p>
+    </div>
+
+    <div class="actions">
+        <a
+            href="{% url 'properties:contract_create' %}"
+            class="btn primary"
+        >
+            + Create Contract
+        </a>
+    </div>
+</div>
+
+<div class="table-wrap">
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Reference</th>
+                <th>Tenant</th>
+                <th>Property</th>
+                <th>Unit</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Rent</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for contract in contracts %}
+
+            <tr>
+
+                <td>
+                    <strong>
+                        {{ contract.contract_reference }}
+                    </strong>
+                </td>
+
+                <td>
+                    {{ contract.tenant.full_name }}
+                </td>
+
+                <td>
+                    {{ contract.unit.property.name }}
+                </td>
+
+                <td>
+                    {{ contract.unit.unit_number }}
+                </td>
+
+                <td>
+                    {{ contract.start_date }}
+                </td>
+
+                <td>
+                    {{ contract.end_date }}
+                </td>
+
+                <td>
+                    ${{ contract.monthly_rent }}
+                </td>
+
+                <td>
+
+                    {% if contract.status == "active" %}
+
+                        <span class="badge ok">
+                            Active
+                        </span>
+
+                    {% elif contract.status == "draft" %}
+
+                        <span class="badge neutral">
+                            Draft
+                        </span>
+
+                    {% elif contract.status == "expired" %}
+
+                        <span class="badge warn">
+                            Expired
+                        </span>
+
+                    {% else %}
+
+                        <span class="badge bad">
+                            {{ contract.get_status_display }}
+                        </span>
+
+                    {% endif %}
+
+                </td>
+
+                <td>
+
+                    <a
+                        href="{% url 'properties:contract_detail' contract.pk %}"
+                        class="btn small"
+                    >
+                        View
+                    </a>
+
+                    <a
+                        href="{% url 'properties:contract_update' contract.pk %}"
+                        class="btn small"
+                    >
+                        Edit
+                    </a>
+
+                    <a
+                        href="{% url 'properties:contract_delete' contract.pk %}"
+                        class="btn small"
+                    >
+                        Delete
+                    </a>
+
+                </td>
+
+            </tr>
+
+            {% empty %}
+
+            <tr>
+                <td colspan="9">
+                    No rental contracts found.
+                </td>
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}
