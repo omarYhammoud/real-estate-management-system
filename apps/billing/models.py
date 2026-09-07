@@ -72,6 +72,26 @@ class Invoice(TimeStampedModel):
         if save:
             self.save(update_fields=['status'])
 
+    @property
+    def is_overdue(self):
+        """Not a stored field — computed each time from status + due_date,
+        so it can never drift out of sync the way a cached flag could."""
+        from django.utils import timezone
+        return self.status != self.Status.PAID and self.due_date < timezone.localdate()
+
+    def add_late_fee(self, amount, reason='Late payment fee'):
+        """Business rule (Waad): record a late fee as an invoice line item
+        (0% tax) and immediately recompute totals + status."""
+        InvoiceLineItem.objects.create(
+            invoice=self,
+            description=reason,
+            quantity=Decimal('1.00'),
+            unit_amount=amount,
+            tax_rate=Decimal('0.00'),
+        )
+        self.recalculate_totals()
+        self.refresh_status()
+
     def __str__(self):
         return self.invoice_reference
 
@@ -94,6 +114,12 @@ class InvoiceLineItem(models.Model):
 
     def __str__(self):
         return f"{self.description} ({self.invoice.invoice_reference})"
+
+
+# Late fees are deliberately NOT a separate field on Invoice. Adding one as
+# an ordinary InvoiceLineItem means it flows through the exact same
+# subtotal/tax/total calculation as rent or any other charge, instead of
+# needing its own parallel set of rules. See Invoice.add_late_fee() below.
 
 
 class Payment(TimeStampedModel):

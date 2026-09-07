@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}Rent Schedule — Billing{% endblock %}
+{% block extra_css %}{% include 'billing/_head.html' %}{% endblock %}
+
+{% block content %}
+<div class="billing-app">
+  <div class="section-head">
+    <div>
+      <h2>Rent Schedule</h2>
+      <p>Auto-generated billing periods for every active rental contract</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Generate Schedule <span class="muted">— for an active contract</span></h3>
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="{{ form.contract.id_for_label }}">Contract</label>
+          {{ form.contract }}
+          {% if form.contract.errors %}<div class="form-errors">{{ form.contract.errors|striptags }}</div>{% endif %}
+          <span class="hint">{{ form.contract.help_text }}</span>
+        </div>
+        <div class="form-field">
+          <label for="{{ form.frequency.id_for_label }}">Billing Frequency</label>
+          {{ form.frequency }}
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn primary">Generate Rent Schedule</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel">
+    <h3>All Schedule Periods</h3>
+    {% if schedules %}
+    <div class="table-wrap" style="border:none;">
+      <table>
+        <thead>
+          <tr>
+            <th>Contract</th><th>Tenant / Unit</th><th>Period</th><th>Due Date</th>
+            <th>Amount</th><th>Invoice</th><th>Status</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for schedule in schedules %}
+          <tr>
+            <td data-label="Contract">{{ schedule.contract.contract_reference }}</td>
+            <td data-label="Tenant">{{ schedule.contract.tenant.full_name }}
+              <div class="cell-sub">{{ schedule.contract.unit }}</div>
+            </td>
+            <td data-label="Period">{{ schedule.billing_period_start|date:"M Y" }}</td>
+            <td data-label="Due">{{ schedule.due_date|date:"M d" }}</td>
+            <td data-label="Amount">${{ schedule.expected_amount }}</td>
+            <td data-label="Invoice">
+              {% with inv=schedule.invoices.first %}
+                {% if inv %}<a class="row-link" href="{% url 'billing:invoice_detail' inv.pk %}">{{ inv.invoice_reference }}</a>
+                {% else %}<span class="muted">— not generated —</span>{% endif %}
+              {% endwith %}
+            </td>
+            <td data-label="Status">
+              {% if schedule.status == 'invoiced' %}<span class="badge ok">Invoiced</span>
+              {% elif schedule.status == 'cancelled' %}<span class="badge neutral">Cancelled</span>
+              {% else %}<span class="badge warn">Pending</span>{% endif %}
+            </td>
+            <td>
+              {% if schedule.status == 'pending' %}
+              <form method="post" action="{% url 'billing:generate_invoice' schedule.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn small primary">Generate Invoice</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="glyph">📋</div>
+      <div class="t">No rent schedule periods yet</div>
+      <p class="muted">Generate one above for an active contract.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

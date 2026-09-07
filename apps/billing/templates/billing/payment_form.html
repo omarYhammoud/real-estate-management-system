@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Record Payment — Billing{% endblock %}
+{% block extra_css %}{% include 'billing/_head.html' %}{% endblock %}
+
+{% block content %}
+<div class="billing-app">
+  <div class="section-head">
+    <div>
+      <h2>Record Payment</h2>
+      <p>Apply a full or partial payment against invoice {{ invoice.invoice_reference }}</p>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <h3>New Payment</h3>
+      <form method="post">
+        {% csrf_token %}
+        <div class="form-grid">
+          <div class="form-field span-2"><label>Tenant</label><input value="{{ invoice.tenant.full_name }}" disabled></div>
+          <div class="form-field span-2"><label>Invoice</label><input value="{{ invoice.invoice_reference }} — Balance ${{ invoice.outstanding_balance }}" disabled></div>
+          <div class="form-field">
+            <label for="{{ form.amount.id_for_label }}">Payment Amount</label>
+            {{ form.amount }}
+            {% if form.amount.errors %}<div class="form-errors">{{ form.amount.errors|striptags }}</div>{% endif %}
+          </div>
+          <div class="form-field">
+            <label for="{{ form.payment_method.id_for_label }}">Payment Method</label>
+            {{ form.payment_method }}
+          </div>
+          <div class="form-field span-2">
+            <label for="{{ form.payment_date.id_for_label }}">Payment Date</label>
+            {{ form.payment_date }}
+          </div>
+        </div>
+        <div class="form-actions">
+          <a class="btn ghost" href="{% url 'billing:invoice_detail' invoice.pk %}">Cancel</a>
+          <button type="submit" class="btn primary">Record Payment</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h3>Invoice Balance Preview</h3>
+      <div class="stat-line"><span class="k">Invoice</span><span class="v">{{ invoice.invoice_reference }} — {{ invoice.billing_period|default:invoice.issue_date }}</span></div>
+      <div class="stat-line"><span class="k">Total due</span><span class="v">${{ invoice.total_amount }}</span></div>
+      <div class="stat-line"><span class="k">Already paid</span><span class="v">${{ invoice.amount_paid }}</span></div>
+      <div class="stat-line"><span class="k">Outstanding balance</span><span class="v neg">${{ invoice.outstanding_balance }}</span></div>
+      <div class="divider"></div>
+      <p class="muted" style="font-size:11.5px;">A receipt is generated automatically the moment this payment is saved — no separate step needed.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

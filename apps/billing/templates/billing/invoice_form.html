@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Create Invoice — Billing{% endblock %}
+{% block extra_css %}{% include 'billing/_head.html' %}{% endblock %}
+
+{% block content %}
+<div class="billing-app">
+  <div class="section-head">
+    <div>
+      <h2>Create Invoice</h2>
+      <p>Manual  invoice — for a charge not tied to a rent schedule period</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-grid">
+        <div class="form-field"><label for="{{ form.contract.id_for_label }}">Contract</label>{{ form.contract }}</div>
+        <div class="form-field"><label for="{{ form.tenant.id_for_label }}">Tenant</label>{{ form.tenant }}</div>
+        <div class="form-field"><label for="{{ form.schedule.id_for_label }}">Rent Schedule Period <span class="hint">optional</span></label>{{ form.schedule }}</div>
+        <div class="form-field"><label for="{{ form.billing_period.id_for_label }}">Billing Period Label</label>{{ form.billing_period }}</div>
+        <div class="form-field"><label for="{{ form.issue_date.id_for_label }}">Issue Date</label>{{ form.issue_date }}</div>
+        <div class="form-field"><label for="{{ form.due_date.id_for_label }}">Due Date</label>{{ form.due_date }}</div>
+      </div>
+      {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors|striptags }}</div>{% endif %}
+
+      <div class="divider"></div>
+      <h3>Line Items</h3>
+      {{ formset.management_form }}
+      {% if formset.non_form_errors %}<div class="form-errors">{{ formset.non_form_errors|striptags }}</div>{% endif %}
+      <div class="table-wrap" style="border:none;">
+        <table>
+          <thead><tr><th>Description</th><th>Qty</th><th>Unit Amount</th><th>Tax Rate %</th><th>Remove</th></tr></thead>
+          <tbody>
+            {% for line_form in formset %}
+            <tr>
+              <td data-label="Description">{{ line_form.description }}{{ line_form.id }}</td>
+              <td data-label="Qty">{{ line_form.quantity }}</td>
+              <td data-label="Amount">{{ line_form.unit_amount }}</td>
+              <td data-label="Tax">{{ line_form.tax_rate }}</td>
+              <td data-label="Remove">{% if line_form.instance.pk %}{{ line_form.DELETE }}{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="form-actions">
+        <a class="btn ghost" href="{% url 'billing:invoice_list' %}">Cancel</a>
+        <button type="submit" class="btn primary">Save Invoice</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+

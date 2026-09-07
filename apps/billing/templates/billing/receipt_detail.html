@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Receipt {{ receipt.receipt_reference }} — Billing{% endblock %}
+{% block extra_css %}{% include 'billing/_head.html' %}{% endblock %}
+
+{% block content %}
+<div class="billing-app">
+  <div class="panel" style="max-width:520px;margin:0 auto;">
+    <div class="flex-between" style="display:flex;justify-content:space-between;align-items:center;">
+      <h3>Payment Receipt</h3>
+      <span class="receipt-mark">PAID</span>
+    </div>
+    <div class="divider"></div>
+    <div class="stat-line"><span class="k">Receipt #</span><span class="v">{{ receipt.receipt_reference }}</span></div>
+    <div class="stat-line"><span class="k">Date</span><span class="v">{{ receipt.receipt_date }}</span></div>
+    <div class="stat-line"><span class="k">Tenant</span><span class="v">{{ receipt.payment.tenant.full_name }}</span></div>
+    <div class="stat-line"><span class="k">Invoice</span><span class="v">
+      <a class="row-link" href="{% url 'billing:invoice_detail' receipt.payment.invoice.pk %}">{{ receipt.payment.invoice.invoice_reference }}</a>
+    </span></div>
+    <div class="stat-line"><span class="k">Payment Method</span><span class="v">{{ receipt.payment.get_payment_method_display }}</span></div>
+    <div class="stat-line"><span class="k">Payment Reference</span><span class="v">{{ receipt.payment.payment_reference }}</span></div>
+    <div class="stat-line"><span class="k">Amount Received</span><span class="v pos">${{ receipt.amount }}</span></div>
+    <div class="divider"></div>
+    <div class="stat-line"><span class="k">Invoice balance after this payment</span><span class="v">${{ receipt.payment.invoice.outstanding_balance }}</span></div>
+    <div class="form-actions">
+      <a class="btn ghost" href="{% url 'billing:invoice_detail' receipt.payment.invoice.pk %}">Back to Invoice</a>
+      <a class="btn primary" href="{% url 'billing:payment_history' %}">Payment History</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

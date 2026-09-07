@@ -1,0 +1,140 @@
+/*
+ * Waad — Billing & Payments page styles.
+ *
+ *
+ */
+:root{
+  --bill-bg-line: rgba(45,74,58,.055);
+  --bill-panel:#FCFCF8;
+  --bill-panel-alt:#F5F7F1;
+  --bill-line:#B9C4B4;
+  --bill-line-soft:#D6DED0;
+  --bill-margin-rule:#C0796A;
+  --bill-ink:#1D2A22;
+  --bill-ink-soft:#51604F;
+  --bill-ink-faint:#8A9686;
+  --bill-accent:#A85D2E;
+  --bill-accent-deep:#8A4A22;
+  --bill-status-ok:#2F6B4A;
+  --bill-status-warn:#93650E;
+  --bill-status-bad:#8B3327;
+  --bill-status-neutral:#4B5A54;
+  --bill-font-display:"Fraunces", Georgia, serif;
+  --bill-font-mono:"IBM Plex Mono", "SF Mono", Consolas, monospace;
+}
+
+.billing-app{ color: var(--bill-ink); }
+.billing-app h2{font-family:var(--bill-font-display);font-size:19px;margin:0 0 4px 0;font-weight:600;color:var(--bill-ink);}
+.billing-app h3{font-family:var(--bill-font-display);font-size:15px;margin:0 0 13px 0;font-weight:600;color:var(--bill-ink);}
+.billing-app .muted{color:var(--bill-ink-faint);}
+
+.billing-app .section-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+.billing-app .section-head p{margin:0;font-size:12.5px;color:var(--bill-ink-faint);}
+.billing-app .actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+.billing-app .btn{
+  border:1px solid var(--bill-ink);background:var(--bill-panel);color:var(--bill-ink);
+  padding:8px 15px;font-size:12.3px;border-radius:2px;cursor:pointer;font-weight:600;
+  white-space:nowrap;transition:all .12s ease;text-decoration:none;display:inline-block;
+}
+.billing-app .btn:hover{background:var(--bill-ink);color:#fff;}
+.billing-app .btn.primary{background:var(--bill-accent);color:#fff;border-color:var(--bill-accent-deep);}
+.billing-app .btn.primary:hover{background:var(--bill-accent-deep);border-color:var(--bill-accent-deep);}
+.billing-app .btn.ghost{border-style:dashed;border-color:var(--bill-line);font-weight:500;color:var(--bill-ink-soft);background:transparent;}
+.billing-app .btn.ghost:hover{background:var(--bill-panel-alt);color:var(--bill-ink);}
+.billing-app .btn.small{padding:5px 11px;font-size:11.3px;}
+
+.billing-app .crumb{font-size:11px;color:var(--bill-ink-faint);font-family:var(--bill-font-mono);text-transform:uppercase;letter-spacing:.4px;}
+.billing-app .crumb b{color:var(--bill-accent);font-weight:600;}
+
+.billing-app .panel{
+  background:var(--bill-panel);border:1px solid var(--bill-line-soft);border-radius:2px;
+  padding:18px 20px 18px 26px;position:relative;box-shadow:0 1px 2px rgba(29,42,34,.04);
+  margin-bottom:16px;
+}
+.billing-app .panel::before{content:"";position:absolute;left:14px;top:0;bottom:0;width:1px;background:var(--bill-margin-rule);opacity:.35;}
+.billing-app .grid-2{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:20px;}
+
+.billing-app table{width:100%;border-collapse:collapse;font-size:12.6px;}
+.billing-app thead th{
+  text-align:left;font-size:10.3px;text-transform:uppercase;letter-spacing:.5px;
+  color:var(--bill-ink-faint);border-bottom:1px solid var(--bill-line-soft);padding:9px 12px;font-weight:600;
+  white-space:nowrap;font-family:var(--bill-font-mono);background:var(--bill-panel-alt);
+}
+.billing-app tbody td{padding:11px 12px;border-bottom:1px solid var(--bill-line-soft);vertical-align:middle;font-variant-numeric:tabular-nums;}
+.billing-app tbody tr:hover{background:var(--bill-panel-alt);}
+.billing-app .table-wrap{overflow-x:auto;background:var(--bill-panel);border:1px solid var(--bill-line-soft);border-radius:2px;}
+.billing-app .row-link{cursor:pointer;color:var(--bill-accent-deep);font-weight:600;text-decoration:underline;text-decoration-color:rgba(168,93,46,.35);text-underline-offset:2px;}
+.billing-app .cell-sub{color:var(--bill-ink-faint);font-size:11.1px;margin-top:2px;}
+
+.billing-app .badge{
+  display:inline-block;padding:2.5px 10px;border-radius:2px;font-size:10.3px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;font-family:var(--bill-font-mono);
+  background:transparent;border:1.4px solid currentColor;position:relative;
+  transform:rotate(-2deg);box-shadow:0 0 0 1px currentColor inset;
+}
+.billing-app .badge.ok{color:var(--bill-status-ok);}
+.billing-app .badge.warn{color:var(--bill-status-warn);}
+.billing-app .badge.bad{color:var(--bill-status-bad);}
+.billing-app .badge.neutral{color:var(--bill-status-neutral);}
+
+.billing-app .filter-bar{
+  display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;
+  background:var(--bill-panel);border:1px solid var(--bill-line-soft);border-radius:2px;padding:12px 14px;
+}
+.billing-app .filter-bar .field{display:flex;flex-direction:column;gap:5px;}
+.billing-app .filter-bar label{font-size:9.8px;text-transform:uppercase;color:var(--bill-ink-faint);letter-spacing:.5px;font-family:var(--bill-font-mono);}
+.billing-app .filter-bar input,.billing-app .filter-bar select{
+  border:1px solid var(--bill-line-soft);border-radius:2px;padding:7px 9px;font-size:12.3px;
+  background:var(--bill-panel-alt);color:var(--bill-ink);min-width:120px;
+}
+.billing-app .filter-bar .field.grow{flex:1;min-width:180px;}
+.billing-app .filter-bar .field.grow input{width:100%;}
+
+.billing-app .form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px;}
+.billing-app .form-grid.cols-3{grid-template-columns:repeat(3,1fr);}
+.billing-app .form-field{display:flex;flex-direction:column;gap:6px;}
+.billing-app .form-field.span-2{grid-column:span 2;}
+.billing-app .form-field label{font-size:11px;font-weight:600;color:var(--bill-ink-soft);text-transform:uppercase;letter-spacing:.3px;}
+.billing-app .form-field .hint{font-size:10.6px;color:var(--bill-ink-faint);font-weight:400;text-transform:none;letter-spacing:0;}
+.billing-app .form-field input,.billing-app .form-field select,.billing-app .form-field textarea{
+  border:1px solid var(--bill-line-soft);border-radius:2px;padding:9px 11px;font-size:12.8px;
+  background:var(--bill-panel-alt);color:var(--bill-ink);width:100%;font-family:var(--bill-font-mono);
+}
+.billing-app .form-field input:focus,.billing-app .form-field select:focus,.billing-app .form-field textarea:focus{border-color:var(--bill-accent);background:#fff;}
+.billing-app .form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--bill-line-soft);}
+.billing-app .form-errors{color:var(--bill-status-bad);font-size:12px;margin-top:4px;}
+
+.billing-app .stat-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dotted var(--bill-line);font-size:12.6px;}
+.billing-app .stat-line:last-child{border-bottom:none;}
+.billing-app .stat-line .k{color:var(--bill-ink-faint);}
+.billing-app .stat-line .v{font-weight:600;font-family:var(--bill-font-mono);}
+.billing-app .stat-line .v.pos{color:var(--bill-status-ok);}
+.billing-app .stat-line .v.neg{color:var(--bill-status-bad);}
+
+.billing-app .divider{height:1px;margin:18px 0;background-image:repeating-linear-gradient(to right, var(--bill-line) 0, var(--bill-line) 4px, transparent 4px, transparent 8px);}
+.billing-app .progress{height:6px;border-radius:1px;background:var(--bill-panel-alt);overflow:hidden;border:1px solid var(--bill-line-soft);}
+.billing-app .progress .fill{height:100%;background:var(--bill-accent);}
+.billing-app .checkbox-row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--bill-ink-soft);}
+.billing-app .empty-state{text-align:center;padding:40px 20px;color:var(--bill-ink-faint);border:1px dashed var(--bill-line);border-radius:2px;background:var(--bill-panel);}
+.billing-app .empty-state .glyph{font-size:26px;margin-bottom:8px;}
+.billing-app .empty-state .t{font-weight:700;color:var(--bill-ink);margin-bottom:4px;font-size:13px;font-family:var(--bill-font-display);}
+.billing-app .mt-16{margin-top:16px;}
+.billing-app .mb-16{margin-bottom:16px;}
+.billing-app .receipt-mark{
+  display:inline-block;border:2px solid var(--bill-status-ok);color:var(--bill-status-ok);
+  padding:10px 22px;font-family:var(--bill-font-display);font-size:18px;font-weight:700;
+  transform:rotate(-3deg);border-radius:3px;
+}
+.billing-app .pagination{display:flex;gap:10px;justify-content:center;margin-top:16px;font-size:12.5px;}
+
+@media (max-width:760px){
+  .billing-app .form-grid,.billing-app .form-grid.cols-3{grid-template-columns:1fr;}
+  .billing-app .grid-2{grid-template-columns:1fr;}
+  .billing-app thead{display:none;}
+  .billing-app table,.billing-app tbody,.billing-app tr,.billing-app td{display:block;width:100%;}
+  .billing-app tbody tr{border:1px solid var(--bill-line-soft);border-left:2px solid var(--bill-accent);border-radius:2px;margin-bottom:10px;padding:9px 12px;background:var(--bill-panel);}
+  .billing-app tbody td{border-bottom:none;padding:5px 0;display:flex;justify-content:space-between;gap:10px;text-align:right;}
+  .billing-app tbody td::before{content:attr(data-label);font-size:10px;text-transform:uppercase;color:var(--bill-ink-faint);font-weight:600;text-align:left;font-family:var(--bill-font-mono);}
+  .billing-app .table-wrap{border:none;background:none;}
+}
