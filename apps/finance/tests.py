@@ -444,7 +444,8 @@ class FinancialReportTests(TestCase):
         partial = self.create_invoice('STALE-PARTIAL', Decimal('100.00'))
         self.create_payment(partial, 'STALE-PARTIAL-PAY', Decimal('40.00'))
         overpaid = self.create_invoice('OVERPAID', Decimal('100.00'))
-        self.create_payment(overpaid, 'OVERPAYMENT', Decimal('125.00'))
+        legacy_payment = self.create_payment(overpaid, 'OVERPAYMENT', Decimal('100.00'))
+        Payment.objects.filter(pk=legacy_payment.pk).update(amount=Decimal('125.00'))
 
         context = self.client.get(reverse('finance:report_receivables')).context
         balances = {

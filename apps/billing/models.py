@@ -178,6 +178,17 @@ class Payment(TimeStampedModel):
             raise ValidationError({
                 'tenant': 'Payment tenant must match the invoice tenant.'
             })
+        if self.invoice_id and self.amount is not None:
+            already_paid = (
+                type(self).objects.filter(invoice_id=self.invoice_id)
+                .exclude(pk=self.pk)
+                .aggregate(total=models.Sum('amount'))['total']
+                or Decimal('0.00')
+            )
+            if already_paid + self.amount > self.invoice.total_amount:
+                raise ValidationError({
+                    'amount': 'Payment amount exceeds the outstanding invoice balance.'
+                })
 
     def save(self, *args, **kwargs):
         update_fields = kwargs.get('update_fields')
