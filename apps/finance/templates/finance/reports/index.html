@@ -1,0 +1,16 @@
+{% extends 'finance/reports/base_report.html' %}
+{% block title %}Reports | Real Estate Management System{% endblock %}
+{% block report_title %}Financial Reports{% endblock %}
+{% block report_description %}Review revenue, expenses, receivables, payments, and portfolio performance.{% endblock %}
+{% block report_content %}
+<section class="report-card-grid">
+    <a class="report-card" href="{% url 'finance:report_profit_loss' %}"><strong>Profit &amp; Loss</strong><span>Rental revenue, expenses, and net result.</span></a>
+    <a class="report-card" href="{% url 'finance:report_revenue' %}"><strong>Revenue Summary</strong><span>Rental income activity and monthly totals.</span></a>
+    <a class="report-card" href="{% url 'finance:report_expenses' %}"><strong>Expense Summary</strong><span>Operating expenses and category breakdown.</span></a>
+    <a class="report-card" href="{% url 'finance:report_receivables' %}"><strong>Outstanding Receivables</strong><span>Open invoices and unpaid balances.</span></a>
+    <a class="report-card" href="{% url 'finance:report_payments' %}"><strong>Payment Report</strong><span>Received payments and collection methods.</span></a>
+    <a class="report-card" href="{% url 'finance:report_transactions' %}"><strong>Transaction Report</strong><span>Detailed finance ledger activity.</span></a>
+    <a class="report-card" href="{% url 'finance:report_tenant_statement' %}"><strong>Tenant Statement</strong><span>Invoices, payments, receipts, and balance by tenant.</span></a>
+    <a class="report-card" href="{% url 'finance:report_property_performance' %}"><strong>Property Performance</strong><span>Revenue, expenses, profit, and occupancy by property.</span></a>
+</section>
+{% endblock %}

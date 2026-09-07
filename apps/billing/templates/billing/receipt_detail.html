@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block title %}Receipt {{ receipt.receipt_reference }} | Keystone RMS{% endblock %}
+{% block content %}
+<div class="crumb">Billing / <b>Receipt</b></div>
+<div class="page-header"><div><p class="eyebrow">Payment confirmation</p><h1>Receipt {{ receipt.receipt_reference }}</h1><p>Payment confirmation for invoice {{ receipt.payment.invoice.invoice_reference }}.</p></div><div class="actions"><span class="badge badge-success">Paid</span><button class="btn btn-outline print-button" type="button" onclick="window.print()">Print Receipt</button></div></div>
+<section class="panel receipt-card"><div class="receipt-brand"><span class="brand-mark">KR</span><div><strong>Keystone RMS</strong><small>Official payment receipt</small></div></div><div class="stat-line"><span class="k">Amount</span><span class="v money receipt-amount">{{ receipt.amount }}</span></div><div class="stat-line"><span class="k">Receipt Date</span><span class="v">{{ receipt.receipt_date }}</span></div><div class="stat-line"><span class="k">Payment</span><span class="v">{{ receipt.payment.payment_reference }}</span></div><div class="stat-line"><span class="k">Tenant</span><span class="v">{{ receipt.payment.tenant }}</span></div><div class="actions panel-actions"><a class="btn btn-primary" href="{% url 'billing:invoice_detail' receipt.payment.invoice.pk %}">Back to Invoice</a><a class="btn btn-outline" href="{% url 'billing:payment_history' %}">Payment History</a></div></section>
+{% endblock %}

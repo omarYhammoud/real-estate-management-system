@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Maintenance Request #{{ maintenance.pk }} | Keystone RMS{% endblock %}
+
+{% block content %}
+<div class="crumb">
+    <a href="{% url 'operations:maintenance_list' %}" class="breadcrumb-link">Operations</a> /
+    <a href="{% url 'operations:maintenance_list' %}" class="breadcrumb-link">Maintenance</a> /
+    <b>Request #{{ maintenance.pk }}</b>
+</div>
+
+<div class="page-header">
+    <div>
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <h1>Maintenance Request #{{ maintenance.pk }}</h1>
+            <span class="badge badge-priority-{{ maintenance.priority }}">{{ maintenance.get_priority_display }}</span>
+            <span class="badge badge-status-{{ maintenance.status }}">{{ maintenance.get_status_display }}</span>
+        </div>
+        <p>Location: <strong>{{ maintenance.property.name }}</strong> {% if maintenance.unit %}&bull; Unit: <strong>{{ maintenance.unit.unit_number }}</strong>{% endif %}</p>
+    </div>
+    <div class="actions">
+        <a href="{% url 'operations:maintenance_edit' maintenance.pk %}" class="btn btn-secondary">Edit Request</a>
+        <a href="{% url 'operations:maintenance_list' %}" class="btn btn-outline">← All Requests</a>
+    </div>
+</div>
+
+<div class="grid-2">
+    <!-- Left Panel: Job Details & Location -->
+    <div class="panel">
+        <h3>Request Specifications <span class="muted">— Property &amp; Tenant Details</span></h3>
+        <div class="stat-line">
+            <span class="k">Target Property</span>
+            <span class="v">{{ maintenance.property.name }}</span>
+        </div>
+        <div class="stat-line">
+            <span class="k">Unit / Space</span>
+            <span class="v">{{ maintenance.unit|default:"Common Area / Entire Building" }}</span>
+        </div>
+        <div class="stat-line">
+            <span class="k">Tenant / Reported By</span>
+            <span class="v">{{ maintenance.tenant.full_name|default:"Property Manager / Staff" }}</span>
+        </div>
+        <div class="stat-line">
+            <span class="k">Request Date</span>
+            <span class="v">{{ maintenance.request_date }}</span>
+        </div>
+        <div class="stat-line">
+            <span class="k">Urgency / Priority</span>
+            <span class="v"><span class="badge badge-priority-{{ maintenance.priority }}">{{ maintenance.get_priority_display }}</span></span>
+        </div>
+        <div class="stat-line">
+            <span class="k">Job Status</span>
+            <span class="v"><span class="badge badge-status-{{ maintenance.status }}">{{ maintenance.get_status_display }}</span></span>
+        </div>
+    </div>
+
+    <!-- Right Panel: Financial Cost & Tracking Log -->
+    <div class="panel">
+        <h3>Cost &amp; Audit Log <span class="muted">— Financials &amp; Timeline</span></h3>
+        
+        <div class="stat-line">
+            <span class="k">Estimated / Incurred Cost</span>
+            <span class="v" style="font-size: 16px;">
+                {% if maintenance.cost %}
+                    <strong style="color: var(--ink);">${{ maintenance.cost }}</strong>
+                {% else %}
+                    <span class="muted">Pending Quote</span>
+                {% endif %}
+            </span>
+        </div>
+        
+        <div class="stat-line">
+            <span class="k">Record Created</span>
+            <span class="v font-mono">{{ maintenance.created_at|date:"M d, Y H:i" }}</span>
+        </div>
+        <div class="stat-line">
+            <span class="k">Last Modified</span>
+            <span class="v font-mono">{{ maintenance.updated_at|date:"M d, Y H:i" }}</span>
+        </div>
+
+        <div style="margin-top: 24px; padding: 14px; background: var(--panel-alt); border: 1px solid var(--line-soft); border-radius: var(--radius-sm);">
+            <div style="font-size: 11px; text-transform: uppercase; color: var(--ink-faint); font-family: var(--font-mono); font-weight: 600; margin-bottom: 4px;">Status Summary</div>
+            <div style="font-size: 12.5px; color: var(--ink);">
+                This work order is currently marked as <strong>{{ maintenance.get_status_display }}</strong> with <strong>{{ maintenance.get_priority_display }}</strong> priority.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Issue Description & Notes Panel -->
+<div class="panel">
+    <h3>Issue Description &amp; Scope of Work</h3>
+    <div class="issue-text" style="white-space: pre-wrap; font-size: 13.5px; background: var(--panel-alt);">{{ maintenance.issue }}</div>
+</div>
+{% endblock %}

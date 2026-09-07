@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}Operational Expenses — Keystone RMS{% endblock %}
+
+{% block content %}
+<div class="crumb">Operations / <b>Expenses</b></div>
+
+<div class="page-header">
+    <div>
+        <h1>Operational Expenses Ledger</h1>
+        <p>Record and audit property operating expenses, utility bills, contractor invoices, and management fees.</p>
+    </div>
+    <div class="actions">
+        <a href="{% url 'operations:expense_create' %}" class="btn btn-primary">+ Record Expense</a>
+    </div>
+</div>
+
+<!-- Filters -->
+<form method="get" class="filter-bar">
+    <div class="field">
+        <label for="filter-category">Expense Category</label>
+        <select name="category" id="filter-category">
+            <option value="">All Categories</option>
+            {% for val, label in category_choices %}
+            <option value="{{ val }}" {% if current_category == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="field">
+        <label for="filter-status">Status</label>
+        <select name="status" id="filter-status">
+            <option value="">All Statuses</option>
+            {% for val, label in status_choices %}
+            <option value="{{ val }}" {% if current_status == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="field" style="flex-direction: row; align-items: flex-end; gap: 8px; margin-top: auto;">
+        <button type="submit" class="btn btn-secondary btn-small">Apply Filters</button>
+        {% if current_category or current_status %}
+        <a href="{% url 'operations:expense_list' %}" class="btn btn-outline btn-small">Clear</a>
+        {% endif %}
+    </div>
+</form>
+
+<div class="table-card">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Reference #</th>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>Expense Date</th>
+                <th>Status</th>
+                <th>Property &amp; Unit</th>
+                <th style="text-align: right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in expenses %}
+            <tr>
+                <td>
+                    <a href="{% url 'operations:expense_detail' e.pk %}" style="font-weight: 600; color: var(--accent-deep); font-family: var(--font-mono);">
+                        {{ e.expense_reference }}
+                    </a>
+                </td>
+                <td>
+                    <span class="badge-cat">{{ e.get_category_display }}</span>
+                </td>
+                <td class="money">
+                    <strong style="color: var(--ink); font-size: 13.5px;">${{ e.amount }}</strong>
+                </td>
+                <td class="font-mono">{{ e.expense_date }}</td>
+                <td>
+                    <span class="badge badge-status-{{ e.status }}">{{ e.get_status_display }}</span>
+                </td>
+                <td>
+                    {% if e.property %}
+                        <strong>{{ e.property.name }}</strong>
+                        {% if e.unit %}<div class="cell-sub">Unit {{ e.unit.unit_number }}</div>{% endif %}
+                    {% else %}
+                        <span class="muted">General / Portfolio</span>
+                    {% endif %}
+                </td>
+                <td style="text-align: right;">
+                    <div class="actions" style="justify-content: flex-end;">
+                        <a href="{% url 'operations:expense_detail' e.pk %}" class="btn btn-secondary btn-small">View</a>
+                        <a href="{% url 'operations:expense_edit' e.pk %}" class="btn btn-outline btn-small">Edit</a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7">
+                    <div class="empty-state">
+                        <div class="glyph">🧾</div>
+                        <div class="t">No Expenses Recorded</div>
+                        <p class="sub">{% if current_category or current_status %}No expense entries match your filter criteria.{% else %}No operating expenses have been logged in the ledger yet.{% endif %}</p>
+                        <div style="margin-top: 14px;">
+                            <a href="{% url 'operations:expense_create' %}" class="btn btn-primary btn-small">+ Record First Expense</a>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if expenses %}
+    <div class="table-toolbar-note">
+        Showing {{ expenses|length }} expense entr{{ expenses|length|pluralize:"y,ies" }} in ledger
+    </div>
+    {% endif %}
+</div>
+
+{% if is_paginated %}
+<div class="pagination">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}&category={{ current_category }}&status={{ current_status }}">← Previous</a>
+    {% endif %}
+    <span>Page {{ page_obj.number }} of {{ page_obj.num_pages }}</span>
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}&category={{ current_category }}&status={{ current_status }}">Next →</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

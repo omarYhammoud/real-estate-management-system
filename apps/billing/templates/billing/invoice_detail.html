@@ -1,5 +1,19 @@
 {% extends 'base.html' %}
+{% block title %}Invoice {{ invoice.invoice_reference }} | Keystone RMS{% endblock %}
 {% block content %}
-<h1>Invoice {{ invoice.invoice_reference }}</h1>
-<p>Total: {{ invoice.total_amount }} — Status: {{ invoice.status }}</p>
+<div class="crumb"><a class="breadcrumb-link" href="{% url 'billing:invoice_list' %}">Invoices</a> / <b>{{ invoice.invoice_reference }}</b></div>
+<header class="page-header">
+    <div><h1>Invoice {{ invoice.invoice_reference }}</h1><p>Billing summary and recorded payment activity.</p></div>
+    <div class="actions">{% if user.role != 'tenant' or user.is_superuser %}<a class="btn btn-primary" href="{% url 'billing:payment_create' invoice.pk %}">Record Payment</a>{% endif %}<a class="btn btn-outline" href="{% url 'billing:invoice_list' %}">Back to Invoices</a></div>
+</header>
+<div class="kpi-row">
+    <article class="kpi-card"><div class="lbl">Invoice Total</div><div class="val">{{ invoice.total_amount }}</div></article>
+    <article class="kpi-card"><div class="lbl">Amount Paid</div><div class="val amount-positive">{{ invoice.amount_paid }}</div></article>
+    <article class="kpi-card"><div class="lbl">Outstanding</div><div class="val amount-outstanding">{{ invoice.outstanding_balance }}</div></article>
+</div>
+<section class="panel"><h3>Invoice Status</h3><div class="stat-line"><span class="k">Reference</span><span class="v">{{ invoice.invoice_reference }}</span></div><div class="stat-line"><span class="k">Status</span><span class="v"><span class="badge badge-status-{{ invoice.status|lower }}">{{ invoice.get_status_display|default:invoice.status }}</span></span></div></section>
+<div class="section-header"><div><h2>Payments</h2><p>Payments allocated to this invoice.</p></div><a class="btn btn-secondary btn-small" href="{% url 'billing:payment_history' %}">All Payments</a></div>
+<section class="table-card"><div class="table-scroll"><table class="table"><thead><tr><th>Reference</th><th>Amount</th><th>Receipt</th></tr></thead><tbody>
+{% for payment in payments %}<tr><td class="font-mono">{{ payment.payment_reference }}</td><td class="money">{{ payment.amount }}</td><td>{% if payment.receipt %}<a href="{% url 'billing:receipt_detail' payment.receipt.pk %}">{{ payment.receipt.receipt_reference }}</a>{% else %}<span class="muted">Not issued</span>{% endif %}</td></tr>{% empty %}<tr><td colspan="3"><div class="empty-state"><div class="t">No payments recorded</div><p class="sub">New payments will be shown here.</p></div></td></tr>{% endfor %}
+</tbody></table></div></section>
 {% endblock %}

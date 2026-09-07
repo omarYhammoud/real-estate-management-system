@@ -1,7 +1,18 @@
 {% extends 'base.html' %}
+{% block title %}Invoices | Keystone RMS{% endblock %}
 {% block content %}
-<h1>Invoices</h1>
-<ul>
-    {% for invoice in invoices %}<li>{{ invoice.invoice_reference }} — {{ invoice.total_amount }} ({{ invoice.status }})</li>{% endfor %}
-</ul>
+<div class="crumb">Billing / <b>Invoices</b></div>
+<header class="page-header">
+    <div><h1>Invoices</h1><p>Review tenant charges, payment status, and outstanding balances.</p></div>
+    <div class="actions"><a class="btn btn-secondary" href="{% url 'billing:payment_history' %}">Payment History</a></div>
+</header>
+<section class="table-card"><div class="table-scroll"><table class="table">
+    <thead><tr><th>Reference</th><th>Total</th><th>Status</th><th class="text-right">Action</th></tr></thead>
+    <tbody>{% for invoice in invoices %}<tr>
+        <td><a class="record-link font-mono" href="{% url 'billing:invoice_detail' invoice.pk %}">{{ invoice.invoice_reference }}</a></td>
+        <td class="money">{{ invoice.total_amount }}</td>
+        <td><span class="badge badge-status-{{ invoice.status|lower }}">{{ invoice.get_status_display|default:invoice.status }}</span></td>
+        <td class="text-right"><a class="btn btn-secondary btn-small" href="{% url 'billing:invoice_detail' invoice.pk %}">View</a></td>
+    </tr>{% empty %}<tr><td colspan="4"><div class="empty-state"><div class="t">No invoices yet</div><p class="sub">Invoices will appear here when billing records are created.</p></div></td></tr>{% endfor %}</tbody>
+</table></div></section>
 {% endblock %}

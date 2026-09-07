@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Deduction #{{ deduction.pk }} — Keystone RMS{% endblock %}
+
+{% block content %}
+<div class="crumb"><a href="{% url 'operations:deduction_list' %}" class="breadcrumb-link">Deposit Deductions</a> / <b>#{{ deduction.pk }}</b></div>
+
+<div class="page-header">
+    <div><h1>Deduction #{{ deduction.pk }}</h1><p>Charge against deposit {{ deduction.deposit.contract.contract_reference }}.</p></div>
+    <div class="actions"><a href="{% url 'operations:deposit_detail' deduction.deposit.pk %}" class="btn btn-primary">View Security Deposit</a><a href="{% url 'operations:deduction_list' %}" class="btn btn-outline">← All Deductions</a></div>
+</div>
+
+<div class="grid-2">
+    <section class="panel">
+        <h3>Deduction Details</h3>
+        <div class="stat-line"><span class="k">Amount</span><span class="v money">${{ deduction.amount }}</span></div>
+        <div class="stat-line"><span class="k">Deduction Date</span><span class="v font-mono">{{ deduction.deduction_date }}</span></div>
+        <div class="stat-line"><span class="k">Authorized By</span><span class="v">{{ deduction.authorized_by|default:'—' }}</span></div>
+        <div class="stat-line"><span class="k">Created</span><span class="v font-mono">{{ deduction.created_at|date:"M d, Y H:i" }}</span></div>
+        <div class="stat-line"><span class="k">Last Modified</span><span class="v font-mono">{{ deduction.updated_at|date:"M d, Y H:i" }}</span></div>
+    </section>
+    <section class="panel">
+        <h3>Deposit Context</h3>
+        <div class="stat-line"><span class="k">Contract</span><span class="v">{{ deduction.deposit.contract.contract_reference }}</span></div>
+        <div class="stat-line"><span class="k">Tenant</span><span class="v">{{ deduction.deposit.contract.tenant.full_name }}</span></div>
+        <div class="stat-line"><span class="k">Remaining Balance</span><span class="v money">${{ deduction.deposit.remaining_balance }}</span></div>
+    </section>
+</div>
+<section class="panel"><h3>Reason / Description</h3><div class="issue-text">{{ deduction.reason }}</div></section>
+{% endblock %}

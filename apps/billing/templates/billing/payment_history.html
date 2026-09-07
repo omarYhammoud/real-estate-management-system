@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Payment History | Keystone RMS{% endblock %}
+{% block content %}
+<div class="crumb">Billing / <b>Payments</b></div>
+<header class="page-header"><div><p class="eyebrow">Collections ledger</p><h1>Payment History</h1><p>Recorded rent payments, allocation details, and issued receipts.</p></div><div class="actions"><a class="btn btn-outline" href="{% url 'billing:invoice_list' %}">View Invoices</a></div></header>
+<section class="content-card">
+    <div class="content-card-header"><div><h2>Recorded payments</h2><p>Most recent collection activity across tenant invoices.</p></div>{% if payments %}<span class="record-count">{{ payments|length }} record{{ payments|length|pluralize }}</span>{% endif %}</div>
+    <div class="table-scroll"><table class="table"><thead><tr><th>Reference</th><th>Invoice</th><th>Tenant</th><th>Date</th><th>Amount</th><th>Method</th><th>Receipt</th></tr></thead><tbody>
+    {% for payment in payments %}<tr><td><strong class="font-mono">{{ payment.payment_reference }}</strong></td><td><a href="{% url 'billing:invoice_detail' payment.invoice.pk %}">{{ payment.invoice.invoice_reference }}</a></td><td>{{ payment.tenant }}</td><td class="font-mono">{{ payment.payment_date }}</td><td class="money amount-positive">{{ payment.amount }}</td><td><span class="badge-cat">{{ payment.get_payment_method_display }}</span></td><td>{% if payment.receipt %}<a class="record-link" href="{% url 'billing:receipt_detail' payment.receipt.pk %}">{{ payment.receipt.receipt_reference }}</a>{% else %}<span class="muted">Not issued</span>{% endif %}</td></tr>
+    {% empty %}<tr><td colspan="7"><div class="empty-state"><div class="t">No payments recorded</div><p class="sub">Completed rent payments and their receipts will appear here.</p></div></td></tr>{% endfor %}
+    </tbody></table></div>
+</section>
+{% if is_paginated %}<nav class="pagination" aria-label="Payment history pages">{% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}<span>Page {{ page_obj.number }} of {{ page_obj.num_pages }}</span>{% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Next</a>{% endif %}</nav>{% endif %}
+{% endblock %}

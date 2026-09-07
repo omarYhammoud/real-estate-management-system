@@ -4,7 +4,10 @@ Models: RentSchedule, Invoice, InvoiceLineItem, Payment, Receipt.
 """
 from decimal import Decimal
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models.signals import post_delete, post_save
+from django.dispatch import receiver
 from apps.core.models import TimeStampedModel
 from apps.properties.models import RentalContract, Tenant
 
@@ -21,6 +24,36 @@ class RentSchedule(TimeStampedModel):
     due_date = models.DateField()
     expected_amount = models.DecimalField(max_digits=12, decimal_places=2)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+
+    def clean(self):
+        super().clean()
+        errors = {}
+        if self.expected_amount is not None and self.expected_amount <= Decimal('0.00'):
+            errors['expected_amount'] = 'Expected amount must be positive.'
+        if (
+            self.billing_period_start
+            and self.billing_period_end
+            and self.billing_period_start > self.billing_period_end
+        ):
+            errors['billing_period_end'] = (
+                'Billing period end cannot precede its start.'
+            )
+        if errors:
+            raise ValidationError(errors)
+        if self.contract_id and self.billing_period_start and self.billing_period_end:
+            duplicate = type(self).objects.filter(
+                contract_id=self.contract_id,
+                billing_period_start=self.billing_period_start,
+                billing_period_end=self.billing_period_end,
+            ).exclude(pk=self.pk)
+            if duplicate.exists():
+                raise ValidationError(
+                    'A rent schedule already exists for this contract and period.'
+                )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Schedule {self.contract.contract_reference} ({self.billing_period_start} – {self.billing_period_end})"
@@ -111,10 +144,43 @@ class Payment(TimeStampedModel):
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     payment_method = models.CharField(max_length=20, choices=Method.choices)
 
+    def clean(self):
+        super().clean()
+        if self.amount is not None and self.amount <= Decimal('0.00'):
+            raise ValidationError({'amount': 'Payment amount must be positive.'})
+        if self.invoice_id and self.tenant_id != self.invoice.tenant_id:
+            raise ValidationError({
+                'tenant': 'Payment tenant must match the invoice tenant.'
+            })
+
     def save(self, *args, **kwargs):
+        update_fields = kwargs.get('update_fields')
+        original_values = {}
+        excluded_fields = []
+        old_invoice_id = None
+
+        if not self._state.adding:
+            persisted = type(self).objects.get(pk=self.pk)
+            old_invoice_id = persisted.invoice_id
+            if update_fields is not None:
+                update_fields = set(update_fields)
+                for field in self._meta.concrete_fields:
+                    if field.name not in update_fields and field.attname not in update_fields:
+                        excluded_fields.append(field.name)
+                        original_values[field.attname] = getattr(self, field.attname)
+                        setattr(self, field.attname, getattr(persisted, field.attname))
+
+        try:
+            self.full_clean(exclude=excluded_fields)
+        finally:
+            for field_name, value in original_values.items():
+                setattr(self, field_name, value)
+
         super().save(*args, **kwargs)
-        # Keep invoice status in sync (full / partial / multiple payments supported).
-        self.invoice.refresh_status()
+        saved = type(self).objects.get(pk=self.pk)
+        saved.invoice.refresh_status()
+        if old_invoice_id and old_invoice_id != saved.invoice_id:
+            Invoice.objects.get(pk=old_invoice_id).refresh_status()
 
     def __str__(self):
         return self.payment_reference
@@ -128,3 +194,20 @@ class Receipt(TimeStampedModel):
 
     def __str__(self):
         return self.receipt_reference
+
+
+@receiver(post_save, sender=InvoiceLineItem, dispatch_uid='billing.refresh_invoice_totals_on_line_save')
+def refresh_invoice_totals_on_line_save(sender, instance, **kwargs):
+    instance.invoice.recalculate_totals()
+
+
+@receiver(post_delete, sender=InvoiceLineItem, dispatch_uid='billing.refresh_invoice_totals_on_line_delete')
+def refresh_invoice_totals_on_line_delete(sender, instance, using, **kwargs):
+    invoice = Invoice.objects.using(using).get(pk=instance.invoice_id)
+    invoice.recalculate_totals()
+
+
+@receiver(post_delete, sender=Payment, dispatch_uid='billing.refresh_invoice_status_on_payment_delete')
+def refresh_invoice_status_on_payment_delete(sender, instance, using, **kwargs):
+    invoice = Invoice.objects.using(using).get(pk=instance.invoice_id)
+    invoice.refresh_status()

@@ -1,0 +1,9 @@
+{% extends 'finance/reports/base_report.html' %}{% load humanize %}
+{% block title %}Expense Summary{% endblock %}{% block report_title %}Expense Summary{% endblock %}
+{% block report_description %}Recorded operating expenses and category totals.{% endblock %}
+{% block report_filter %}{% include 'finance/reports/_filter.html' %}{% endblock %}
+{% block report_content %}
+<section class="report-summary-grid"><article><span>Total Expenses</span><strong>{{ total_expenses|floatformat:2|intcomma }}</strong></article><article><span>Expense Records</span><strong>{{ expense_count }}</strong></article></section>
+<section class="report-panel"><h2>Category Breakdown</h2>{% if category_breakdown %}<div class="table-scroll"><table class="report-table"><thead><tr><th>Category</th><th>Records</th><th>Total</th></tr></thead><tbody>{% for row in category_breakdown %}<tr><td>{{ row.label }}</td><td>{{ row.count }}</td><td>{{ row.total|floatformat:2|intcomma }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="report-empty">No expenses match these filters.</p>{% endif %}</section>
+<section class="report-panel"><h2>Expense Records</h2>{% if expenses %}<div class="table-scroll"><table class="report-table"><thead><tr><th>Reference</th><th>Date</th><th>Category</th><th>Property</th><th>Amount</th></tr></thead><tbody>{% for item in expenses %}<tr><td>{{ item.expense_reference }}</td><td>{{ item.expense_date }}</td><td>{{ item.get_category_display }}</td><td>{{ item.property|default:'—' }}</td><td>{{ item.amount|floatformat:2|intcomma }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="report-empty">No expense records available.</p>{% endif %}</section>
+{% endblock %}

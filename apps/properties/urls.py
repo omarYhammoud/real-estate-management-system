@@ -131,5 +131,5 @@ urlpatterns = [
         views.contract_delete,
         name="contract_delete",
     ),
-    
-]   
+
+]
