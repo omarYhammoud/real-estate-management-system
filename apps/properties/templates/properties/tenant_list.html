@@ -1,35 +1,34 @@
 {% extends "base.html" %}
 
 {% block title %}
-Properties — Keystone RMS
+Tenants — Keystone RMS
 {% endblock %}
 
 {% block breadcrumb %}
-Portfolio / <b>Properties</b>
+Portfolio / <b>Tenants</b>
 {% endblock %}
 
 {% block page_title %}
-Properties
+Tenants
 {% endblock %}
 
 {% block content %}
 
 <div class="section-head">
     <div>
-        <h2>Property Portfolio</h2>
-        <p>Manage all registered properties and their ownership details.</p>
+        <h2>Tenants</h2>
+        <p>Manage tenant profiles and review their rental history.</p>
     </div>
 
     <div class="actions">
         <a
-            href="{% url 'properties:property_create' %}"
+            href="{% url 'properties:tenant_create' %}"
             class="btn primary"
         >
-            + Add Property
+            + Add Tenant
         </a>
     </div>
 </div>
-
 
 <div class="table-wrap">
 
@@ -37,10 +36,10 @@ Properties
 
         <thead>
             <tr>
-                <th>Name</th>
-                <th>Owner</th>
-                <th>Address</th>
-                <th>Type</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Identification Number</th>
                 <th>Status</th>
                 <th>Actions</th>
             </tr>
@@ -48,53 +47,64 @@ Properties
 
         <tbody>
 
-            {% for property in properties %}
+            {% for tenant in tenants %}
 
             <tr>
 
-                <td data-label="Name">
+                <td>
                     <strong>
-                        {{ property.name }}
+                        {{ tenant.full_name }}
                     </strong>
                 </td>
 
-                <td data-label="Owner">
-                    {{ property.owner.full_name }}
+                <td>
+                    {{ tenant.email }}
                 </td>
 
-                <td data-label="Address">
-                    {{ property.address }}
+                <td>
+                    {{ tenant.phone }}
                 </td>
 
-                <td data-label="Type">
-                    {{ property.get_property_type_display }}
+                <td>
+                    {{ tenant.identification_number }}
                 </td>
 
-                <td data-label="Status">
+                <td>
 
-                    {% if property.status == "active" %}
+                    {% if tenant.status == "active" %}
+
                         <span class="badge ok">
                             Active
                         </span>
+
                     {% else %}
+
                         <span class="badge neutral">
-                            {{ property.status }}
+                            {{ tenant.status }}
                         </span>
+
                     {% endif %}
 
                 </td>
 
-                <td data-label="Actions">
+                <td>
 
                     <a
-                        href="{% url 'properties:property_update' property.pk %}"
+                        href="{% url 'properties:tenant_detail' tenant.pk %}"
+                        class="btn small"
+                    >
+                        View
+                    </a>
+
+                    <a
+                        href="{% url 'properties:tenant_update' tenant.pk %}"
                         class="btn small"
                     >
                         Edit
                     </a>
 
                     <a
-                        href="{% url 'properties:property_delete' property.pk %}"
+                        href="{% url 'properties:tenant_delete' tenant.pk %}"
                         class="btn small"
                     >
                         Delete
@@ -108,7 +118,7 @@ Properties
 
             <tr>
                 <td colspan="6">
-                    No properties found.
+                    No tenants found.
                 </td>
             </tr>
 

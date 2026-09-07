@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}
+Contract Details — Keystone RMS
+{% endblock %}
+
+{% block breadcrumb %}
+Leasing / Rental Contracts / <b>{{ contract.contract_reference }}</b>
+{% endblock %}
+
+{% block page_title %}
+Contract Details
+{% endblock %}
+
+{% block content %}
+
+<div class="section-head">
+    <div>
+        <h2>{{ contract.contract_reference }}</h2>
+        <p>Rental agreement details for this tenant and unit.</p>
+    </div>
+
+    <div class="actions">
+        <a
+            href="{% url 'properties:contract_update' contract.pk %}"
+            class="btn"
+        >
+            Edit Contract
+        </a>
+
+        <a
+            href="{% url 'properties:contract_list' %}"
+            class="btn"
+        >
+            Back to Contracts
+        </a>
+    </div>
+</div>
+
+<div class="panel" style="margin-bottom: 20px;">
+
+    <h3>Contract Information</h3>
+
+    <p>
+        <strong>Contract Reference:</strong>
+        {{ contract.contract_reference }}
+    </p>
+
+    <p>
+        <strong>Tenant:</strong>
+        {{ contract.tenant.full_name }}
+    </p>
+
+    <p>
+        <strong>Property:</strong>
+        {{ contract.unit.property.name }}
+    </p>
+
+    <p>
+        <strong>Unit:</strong>
+        {{ contract.unit.unit_number }}
+    </p>
+
+    <p>
+        <strong>Start Date:</strong>
+        {{ contract.start_date }}
+    </p>
+
+    <p>
+        <strong>End Date:</strong>
+        {{ contract.end_date }}
+    </p>
+
+    <p>
+        <strong>Monthly Rent:</strong>
+        ${{ contract.monthly_rent }}
+    </p>
+
+    <p>
+        <strong>Payment Due Rule:</strong>
+        {{ contract.payment_due_rule|default:"—" }}
+    </p>
+
+    <p>
+        <strong>Status:</strong>
+
+        {% if contract.status == "active" %}
+            <span class="badge ok">
+                Active
+            </span>
+
+        {% elif contract.status == "draft" %}
+            <span class="badge neutral">
+                Draft
+            </span>
+
+        {% elif contract.status == "expired" %}
+            <span class="badge warn">
+                Expired
+            </span>
+
+        {% else %}
+            <span class="badge bad">
+                {{ contract.get_status_display }}
+            </span>
+        {% endif %}
+    </p>
+
+</div>
+
+<div class="panel">
+
+    <h3>Linked Rental Information</h3>
+
+    <p>
+        <strong>Tenant:</strong>
+        <a
+            href="{% url 'properties:tenant_detail' contract.tenant.pk %}"
+            style="color: var(--accent-deep); font-weight: 600;"
+        >
+            {{ contract.tenant.full_name }}
+        </a>
+    </p>
+
+    <p>
+        <strong>Unit:</strong>
+        {{ contract.unit.property.name }}
+        —
+        Unit {{ contract.unit.unit_number }}
+    </p>
+
+</div>
+
+{% endblock %}
