@@ -1558,3 +1558,629 @@ a:hover {
     .receipt-card { max-width: none; border: 1px solid #999; box-shadow: none; }
 }
 
+/* =========================================================
+   PROPERTY & RENTAL MODULE
+========================================================= */
+
+.module-page {
+    width: 100%;
+}
+
+.module-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 20px;
+
+    padding: 8px 0 22px;
+
+    border-bottom: 1px solid rgba(55, 79, 65, 0.18);
+
+    margin-bottom: 30px;
+}
+
+.module-kicker {
+    margin: 0 0 7px;
+
+    font-family: "IBM Plex Mono", monospace;
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.9px;
+
+    color: #9a6538;
+}
+
+.module-title {
+    margin: 0;
+
+    font-family: "Fraunces", Georgia, serif;
+
+    font-size: 32px;
+
+    line-height: 1.1;
+
+    font-weight: 600;
+
+    color: #16281e;
+}
+
+.module-subtitle {
+    margin: 8px 0 0;
+
+    font-size: 14px;
+
+    line-height: 1.5;
+
+    color: #657468;
+}
+
+
+/* CARD */
+
+.module-card {
+    background: #fbfcf7;
+
+    border: 1px solid rgba(73, 95, 80, 0.18);
+
+    border-radius: 8px;
+
+    box-shadow:
+        0 3px 12px rgba(27, 48, 35, 0.08);
+
+    padding: 28px;
+}
+
+
+/* FORM */
+
+.form-card {
+    max-width: 920px;
+}
+
+.form-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 22px 26px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    margin-bottom: 7px;
+
+    font-family: "IBM Plex Mono", monospace;
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.6px;
+
+    color: #273d30;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+
+    min-height: 42px;
+
+    padding: 10px 12px;
+
+    border: 1px solid #bdc8bd;
+
+    border-radius: 4px;
+
+    background: #f7f8f3;
+
+    color: #1c2d22;
+
+    font-family: "Inter", sans-serif;
+
+    font-size: 14px;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        background 0.15s ease;
+}
+
+.form-group textarea {
+    min-height: 110px;
+
+    resize: vertical;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+
+    border-color: #b5602e;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 0 0 3px rgba(181, 96, 46, 0.12);
+}
+
+.help-text {
+    margin-top: 5px;
+
+    font-size: 11px;
+
+    color: #7b897e;
+}
+
+.field-error {
+    margin-top: 6px;
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+    color: #8d3327;
+}
+
+.form-alert {
+    margin-bottom: 20px;
+
+    padding: 12px 14px;
+
+    border-left: 4px solid #8d3327;
+
+    background: #fff0ed;
+
+    color: #74291f;
+
+    font-size: 13px;
+}
+
+.required {
+    color: #b5602e;
+}
+
+
+/* BUTTONS */
+
+.form-actions {
+    display: flex;
+
+    gap: 10px;
+
+    margin-top: 28px;
+
+    padding-top: 22px;
+
+    border-top: 1px solid rgba(55, 79, 65, 0.14);
+}
+
+.module-btn {
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    min-height: 38px;
+
+    padding: 8px 16px;
+
+    border-radius: 3px;
+
+    border: 1px solid transparent;
+
+    font-family: "Inter", sans-serif;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease;
+}
+
+.module-btn-primary {
+    background: #b5602e;
+
+    border-color: #9d4f23;
+
+    color: #ffffff;
+}
+
+.module-btn-primary:hover {
+    background: #994a22;
+}
+
+.module-btn-secondary {
+    background: #f6f7f2;
+
+    border-color: #bfc9c0;
+
+    color: #26392e;
+}
+
+.module-btn-secondary:hover {
+    background: #e9eee7;
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 800px) {
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .module-title {
+        font-size: 27px;
+    }
+
+    .module-card {
+        padding: 20px;
+    }
+
+}
+
+
+/* =========================================================
+   PROPERTY & RENTAL FORMS
+   Scoped so it does not affect other modules
+========================================================= */
+
+.property-form-card {
+    max-width: 980px;
+    margin-bottom: 32px;
+}
+
+.property-form-card .content-card-header {
+    padding: 24px 28px 20px;
+    border-bottom: 1px solid #d7ded5;
+}
+
+.property-form-card .content-card-header h2 {
+    margin: 0 0 6px;
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 23px;
+    color: #173024;
+}
+
+.property-form-card .content-card-header p {
+    margin: 0;
+    color: #68766b;
+    font-size: 13px;
+}
+
+
+/* FORM BODY */
+
+.property-form-card .form-stack {
+    padding: 26px 28px 28px;
+}
+
+
+/* EACH FIELD */
+
+.property-form-card .form-field {
+    margin-bottom: 20px;
+}
+
+
+/* LABELS */
+
+.property-form-card .form-field label {
+    display: block;
+    margin-bottom: 7px;
+
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    font-weight: 600;
+
+    text-transform: uppercase;
+    letter-spacing: .65px;
+
+    color: #31483a;
+}
+
+.property-form-card .form-field label span {
+    color: #b65f2d;
+}
+
+
+/* INPUTS */
+
+.property-form-card .form-field input,
+.property-form-card .form-field select,
+.property-form-card .form-field textarea {
+    display: block;
+
+    width: 100%;
+    max-width: 760px;
+
+    min-height: 43px;
+
+    padding: 10px 13px;
+
+    border: 1px solid #bfc9bf;
+    border-radius: 4px;
+
+    background: #ffffff;
+
+    color: #18281f;
+
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+
+    transition:
+        border-color .15s ease,
+        box-shadow .15s ease,
+        background .15s ease;
+}
+
+
+/* SELECT */
+
+.property-form-card .form-field select {
+    cursor: pointer;
+}
+
+
+/* TEXTAREA */
+
+.property-form-card .form-field textarea {
+    min-height: 110px;
+    resize: vertical;
+}
+
+
+/* FOCUS */
+
+.property-form-card .form-field input:focus,
+.property-form-card .form-field select:focus,
+.property-form-card .form-field textarea:focus {
+    outline: none;
+
+    border-color: #b45c2b;
+
+    box-shadow:
+        0 0 0 3px rgba(180, 92, 43, .12);
+
+    background: #fff;
+}
+
+
+/* HELP TEXT */
+
+.property-form-card .help-text {
+    max-width: 760px;
+
+    margin-top: 6px;
+
+    font-size: 11px;
+    line-height: 1.4;
+
+    color: #7a887d;
+}
+
+
+/* ERRORS */
+
+.property-form-card .field-error {
+    max-width: 760px;
+
+    margin-top: 6px;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    color: #9a3529;
+}
+
+
+/* BUTTON AREA */
+
+.property-form-card .form-stack > .actions {
+    max-width: 760px;
+
+    margin-top: 28px;
+    padding-top: 20px;
+
+    border-top: 1px solid #d9e0d8;
+
+    display: flex;
+    gap: 10px;
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 800px) {
+
+    .property-form-card {
+        max-width: 100%;
+    }
+
+    .property-form-card .content-card-header,
+    .property-form-card .form-stack {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .property-form-card .form-field input,
+    .property-form-card .form-field select,
+    .property-form-card .form-field textarea {
+        max-width: 100%;
+    }
+}
+
+/* =========================================================
+   SIDEBAR POLISH
+========================================================= */
+
+.sidebar {
+    background: #183025;
+}
+
+
+/* navigation area */
+
+.sidebar-nav {
+    padding: 16px 0 22px;
+}
+
+
+/* space between groups */
+
+.sidebar-section {
+    margin-bottom: 18px;
+}
+
+
+/* section labels */
+
+.sidebar-label {
+    margin: 0 0 8px;
+
+    padding: 0 15px;
+
+    font-family: "IBM Plex Mono", monospace;
+
+    font-size: 10px;
+
+    font-weight: 600;
+
+    text-transform: uppercase;
+
+    letter-spacing: 1.2px;
+
+    color: #9eb39f;
+}
+
+
+/* remove default list spacing */
+
+.sidebar-nav-list {
+    margin: 0;
+    padding: 0;
+
+    list-style: none;
+}
+
+
+/* each link */
+
+.sidebar-nav-list li a {
+    display: flex;
+
+    align-items: center;
+
+    gap: 11px;
+
+    min-height: 42px;
+
+    padding: 9px 15px;
+
+    border-left: 3px solid transparent;
+
+    color: #b8c6b9;
+
+    text-decoration: none;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    transition:
+        background .15s ease,
+        color .15s ease,
+        border-color .15s ease;
+}
+
+
+/* hover */
+
+.sidebar-nav-list li a:hover {
+    background: rgba(255, 255, 255, .035);
+
+    color: #f0f4ed;
+}
+
+
+/* marker */
+
+.nav-marker {
+    width: 7px;
+    height: 7px;
+
+    flex-shrink: 0;
+
+    border: 1px solid #728b76;
+
+    transform: rotate(45deg);
+
+    opacity: .75;
+}
+
+
+/* active link */
+
+.sidebar-nav-list li a.active {
+    background: rgba(181, 96, 46, .16);
+
+    border-left-color: #c56c37;
+
+    color: #ffffff;
+
+    font-weight: 700;
+}
+
+
+/* active marker */
+
+.sidebar-nav-list li a.active .nav-marker {
+    background: #d27840;
+
+    border-color: #d27840;
+
+    opacity: 1;
+}
+
+
+/* bottom note */
+
+.sidebar-note {
+    margin-top: 26px;
+
+    padding: 14px 15px 0;
+
+    border-top: 1px solid rgba(255, 255, 255, .07);
+
+    font-family: "IBM Plex Mono", monospace;
+
+    font-size: 10px;
+
+    letter-spacing: .4px;
+
+    color: #7f9682;
+}
