@@ -4,6 +4,7 @@ from datetime import timedelta
 from decimal import Decimal
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
@@ -35,6 +36,7 @@ class Command(BaseCommand):
             ], 1):
                 owner = self.add(Owner, {'email': f'owner{p}@rms-demo.example'},
                     full_name=f'Demo Owner {p}', address=f'{p} Example Avenue')
+                self.link_owner_login(owner, p)
                 prop = self.add(Property, {'name': f'[DEMO] {name}', 'owner': owner},
                     address=f'{p * 10} Example Avenue, Demo City', property_type=kind,
                     description='Fictional property created by seed_mock_data.')
@@ -99,7 +101,30 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'{prefix} {sum(self.created.values())} records.'))
         for model, count in sorted(self.created.items()):
             self.stdout.write(f'  {model}: {count}')
-        self.stdout.write('Existing records were preserved. Demo contacts use the reserved .example domain.')
+        self.stdout.write('Existing records were preserved; unlinked demo owners received login accounts.')
+        self.stdout.write('New demo logins: demo_owner1 through demo_owner4; password: DemoOwner2026!')
+        self.stdout.write('Existing linked accounts and passwords are unchanged. Dry runs do not save accounts.')
+
+    def link_owner_login(self, owner, number):
+        if owner.user_id:
+            return
+        User = get_user_model()
+        username = f'demo_owner{number}'
+        if User.objects.filter(username=username).exists():
+            raise CommandError(
+                f'Cannot link {owner.email}: username {username} already exists. '
+                'No changes were saved. Review and link the correct account manually.'
+            )
+        user = User(username=username, email=owner.email, first_name='Demo',
+                    last_name=f'Owner {number}', role=User.Role.OWNER,
+                    is_active=True, is_staff=False, is_superuser=False)
+        user.set_password('DemoOwner2026!')
+        user.full_clean()
+        user.save()
+        owner.user = user
+        owner.full_clean()
+        owner.save(update_fields=['user', 'updated_at'])
+        self.created[User.__name__] += 1
 
     def add(self, model, lookup, **defaults):
         obj = model.objects.filter(**lookup).first()
