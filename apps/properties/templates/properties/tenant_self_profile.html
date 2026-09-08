@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}My Profile | Keystone RMS{% endblock %}
+{% block content %}
+<div class="crumb">Account / <b>My Profile</b></div>
+<div class="page-header">
+    <div><p class="eyebrow">Tenant self-service</p><h1>My Profile</h1><p>Your linked tenant information.</p></div>
+    <span class="badge badge-success">{{ tenant.get_status_display }}</span>
+</div>
+<section class="panel account-panel">
+    <div class="stat-line"><span class="k">Full name</span><span class="v">{{ tenant.full_name }}</span></div>
+    <div class="stat-line"><span class="k">Email</span><span class="v">{{ tenant.email|default:'—' }}</span></div>
+    <div class="stat-line"><span class="k">Phone</span><span class="v">{{ tenant.phone|default:'—' }}</span></div>
+    <div class="stat-line"><span class="k">Identification</span><span class="v">{{ tenant.identification_number|default:'—' }}</span></div>
+</section>
+{% endblock %}

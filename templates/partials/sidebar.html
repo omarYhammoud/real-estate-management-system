@@ -1,216 +1,44 @@
 <aside class="sidebar" aria-label="Sidebar navigation">
-
-    <nav class="sidebar-nav" aria-label="Application navigation">
-
-        <!-- Dashboard -->
-        <div class="sidebar-section">
-
-            <ul class="sidebar-nav-list">
-
-                <li>
-                    <a
-                        href="{% url 'finance:dashboard' %}"
-                        class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
-                        {% if request.resolver_match.url_name == 'dashboard' %}aria-current="page"{% endif %}
-                    >
-                        <span class="nav-marker" aria-hidden="true"></span>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
-
-            </ul>
-
-        </div>
-
-
-        <!-- Portfolio -->
-        <div class="sidebar-section">
-
-            <h4 class="sidebar-label">
-                Portfolio
-            </h4>
-
-            <ul class="sidebar-nav-list">
-
-                <li>
-                    <a
-                        href="{% url 'properties:property_list' %}"
-                        class="{% if '/properties/' in request.path %}active{% endif %}"
-                        {% if '/properties/' in request.path %}aria-current="page"{% endif %}
-                    >
-                        <span class="nav-marker" aria-hidden="true"></span>
-                        <span>Properties</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a
-                        href="{% url 'properties:unit_list' %}"
-                        class="{% if '/units/' in request.path %}active{% endif %}"
-                        {% if '/units/' in request.path %}aria-current="page"{% endif %}
-                    >
-                        <span class="nav-marker" aria-hidden="true"></span>
-                        <span>Units</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a
-                        href="{% url 'properties:owner_list' %}"
-                        class="{% if '/owners/' in request.path %}active{% endif %}"
-                        {% if '/owners/' in request.path %}aria-current="page"{% endif %}
-                    >
-                        <span class="nav-marker" aria-hidden="true"></span>
-                        <span>Owners</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a
-                        href="{% url 'properties:tenant_list' %}"
-                        class="{% if '/tenants/' in request.path %}active{% endif %}"
-                        {% if '/tenants/' in request.path %}aria-current="page"{% endif %}
-                    >
-                        <span class="nav-marker" aria-hidden="true"></span>
-                        <span>Tenants</span>
-                    </a>
-                </li>
-
-            </ul>
-
-        </div>
-
-
-        <!-- Leasing -->
-        <div class="sidebar-section">
-
-            <h4 class="sidebar-label">
-                Leasing
-            </h4>
-
-            <ul class="sidebar-nav-list">
-
-                <li>
-                    <a
-                        href="{% url 'properties:contract_list' %}"
-                        class="{% if '/contracts/' in request.path %}active{% endif %}"
-                        {% if '/contracts/' in request.path %}aria-current="page"{% endif %}
-                    >
-                        <span class="nav-marker" aria-hidden="true"></span>
-                        <span>Rental Contracts</span>
-                    </a>
-                </li>
-
-            </ul>
-
-        </div>
-
-
-        <!-- Billing -->
-        <div class="sidebar-section">
-
-            <h4 class="sidebar-label">
-                Billing &amp; Payments
-            </h4>
-
-            <ul class="sidebar-nav-list">
-
-                <li>
-                    <a
-                        href="{% url 'billing:invoice_list' %}"
-                        class="{% if 'invoice' in request.path %}active{% endif %}"
-                        {% if 'invoice' in request.path %}aria-current="page"{% endif %}
-                    >
-                        <span class="nav-marker" aria-hidden="true"></span>
-                        <span>Billing &amp; Invoices</span>
-                    </a>
-                </li>
-
-            </ul>
-
-        </div>
-
-
-        <!-- Operations -->
-        <div class="sidebar-section">
-
-            <h4 class="sidebar-label">
-                Operations
-            </h4>
-
-            <ul class="sidebar-nav-list">
-
-                <li>
-                    <a
-                        href="{% url 'operations:deposit_list' %}"
-                        class="{% if 'deposit' in request.path %}active{% endif %}"
-                        {% if 'deposit' in request.path %}aria-current="page"{% endif %}
-                    >
-                        <span class="nav-marker" aria-hidden="true"></span>
-                        <span>Security Deposits</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a
-                        href="{% url 'operations:maintenance_list' %}"
-                        class="{% if 'maintenance' in request.path %}active{% endif %}"
-                        {% if 'maintenance' in request.path %}aria-current="page"{% endif %}
-                    >
-                        <span class="nav-marker" aria-hidden="true"></span>
-                        <span>Maintenance</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a
-                        href="{% url 'operations:expense_list' %}"
-                        class="{% if 'expense' in request.path %}active{% endif %}"
-                        {% if 'expense' in request.path %}aria-current="page"{% endif %}
-                    >
-                        <span class="nav-marker" aria-hidden="true"></span>
-                        <span>Expenses</span>
-                    </a>
-                </li>
-
-            </ul>
-
-        </div>
-
-
-        <!-- Finance -->
-        <div class="sidebar-section">
-
-            <h4 class="sidebar-label">
-                Finance &amp; Insights
-            </h4>
-
-            <ul class="sidebar-nav-list">
-
-                {% if user.is_superuser or user.role == 'admin' or user.role == 'accountant' or user.role == 'owner' %}
-
-                    <li>
-                        <a
-                            href="{% url 'finance:reports' %}"
-                            class="{% if request.resolver_match.namespace == 'finance' and request.resolver_match.url_name != 'dashboard' %}active{% endif %}"
-                            {% if request.resolver_match.namespace == 'finance' and request.resolver_match.url_name != 'dashboard' %}aria-current="page"{% endif %}
-                        >
-                            <span class="nav-marker" aria-hidden="true"></span>
-                            <span>Financial Reports</span>
-                        </a>
-                    </li>
-
-                {% endif %}
-
-            </ul>
-
-        </div>
-
-
-        <div class="sidebar-note">
-            Secure portfolio workspace
-        </div>
-
-    </nav>
-
+<nav class="sidebar-nav" aria-label="Application navigation">
+{% if user.role == 'tenant' and not user.is_superuser %}
+<div class="sidebar-section"><h4 class="sidebar-label">My Account</h4><ul class="sidebar-nav-list">
+<li><a href="{% url 'accounts:home' %}"><span class="nav-marker"></span><span>Home</span></a></li>
+<li><a href="{% url 'properties:tenant_self_profile' %}"><span class="nav-marker"></span><span>My Profile</span></a></li>
+<li><a href="{% url 'properties:tenant_self_contracts' %}"><span class="nav-marker"></span><span>My Contract</span></a></li>
+<li><a href="{% url 'billing:invoice_list' %}"><span class="nav-marker"></span><span>My Invoices</span></a></li>
+<li><a href="{% url 'billing:payment_history' %}"><span class="nav-marker"></span><span>My Payments</span></a></li>
+<li><a href="{% url 'finance:report_tenant_statement' %}"><span class="nav-marker"></span><span>My Statement</span></a></li>
+</ul></div>
+{% elif user.role == 'owner' and not user.is_superuser %}
+<div class="sidebar-section"><h4 class="sidebar-label">Owner Portfolio</h4><ul class="sidebar-nav-list">
+<li><a href="{% url 'finance:dashboard' %}"><span class="nav-marker"></span><span>Dashboard</span></a></li>
+<li><a href="{% url 'properties:owner_self_property_list' %}"><span class="nav-marker"></span><span>My Properties</span></a></li>
+<li><a href="{% url 'finance:reports' %}"><span class="nav-marker"></span><span>Financial Reports</span></a></li>
+</ul></div>
+{% else %}
+<div class="sidebar-section"><ul class="sidebar-nav-list"><li><a href="{% url 'finance:dashboard' %}"><span class="nav-marker"></span><span>Dashboard</span></a></li></ul></div>
+{% if user.is_superuser or user.role == 'admin' or user.role == 'property_manager' %}
+<div class="sidebar-section"><h4 class="sidebar-label">Portfolio</h4><ul class="sidebar-nav-list">
+<li><a href="{% url 'properties:owner_list' %}"><span class="nav-marker"></span><span>Owners</span></a></li>
+<li><a href="{% url 'properties:property_list' %}"><span class="nav-marker"></span><span>Properties</span></a></li>
+<li><a href="{% url 'properties:unit_list' %}"><span class="nav-marker"></span><span>Units</span></a></li>
+<li><a href="{% url 'properties:tenant_list' %}"><span class="nav-marker"></span><span>Tenants</span></a></li>
+<li><a href="{% url 'properties:contract_list' %}"><span class="nav-marker"></span><span>Rental Contracts</span></a></li>
+</ul></div>
+{% endif %}
+{% if user.is_superuser or user.role == 'admin' or user.role == 'accountant' %}
+<div class="sidebar-section"><h4 class="sidebar-label">Billing &amp; Finance</h4><ul class="sidebar-nav-list">
+<li><a href="{% url 'billing:invoice_list' %}"><span class="nav-marker"></span><span>Billing &amp; Invoices</span></a></li>
+<li><a href="{% url 'billing:payment_history' %}"><span class="nav-marker"></span><span>Payment History</span></a></li>
+<li><a href="{% url 'operations:deposit_list' %}"><span class="nav-marker"></span><span>Security Deposits</span></a></li>
+<li><a href="{% url 'operations:expense_list' %}"><span class="nav-marker"></span><span>Expenses</span></a></li>
+<li><a href="{% url 'finance:reports' %}"><span class="nav-marker"></span><span>Financial Reports</span></a></li>
+</ul></div>
+{% endif %}
+{% if user.is_superuser or user.role == 'admin' or user.role == 'property_manager' %}
+<div class="sidebar-section"><h4 class="sidebar-label">Operations</h4><ul class="sidebar-nav-list"><li><a href="{% url 'operations:maintenance_list' %}"><span class="nav-marker"></span><span>Maintenance</span></a></li></ul></div>
+{% endif %}
+{% endif %}
+<div class="sidebar-note">Secure portfolio workspace</div>
+</nav>
 </aside>

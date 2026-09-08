@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}My Properties | Keystone RMS{% endblock %}
+{% block content %}
+<div class="crumb">Portfolio / <b>My Properties</b></div>
+<div class="page-header"><div><p class="eyebrow">Owner portfolio</p><h1>My Properties</h1><p>Read-only portfolio information for your linked Owner profile.</p></div></div>
+<section class="panel table-card"><div class="table-wrap"><table>
+<thead><tr><th>Property</th><th>Address</th><th>Type</th><th>Units</th><th>Status</th><th></th></tr></thead>
+<tbody>{% for property in properties %}<tr><td>{{ property.name }}</td><td>{{ property.address }}</td><td>{{ property.get_property_type_display }}</td><td>{{ property.unit_count }}</td><td><span class="badge">{{ property.get_status_display }}</span></td><td><a class="btn btn-outline btn-small" href="{% url 'properties:owner_self_property_detail' property.pk %}">View</a></td></tr>{% empty %}<tr><td colspan="6"><div class="empty-state"><div class="t">No properties linked to your profile</div></div></td></tr>{% endfor %}</tbody>
+</table></div></section>
+{% endblock %}

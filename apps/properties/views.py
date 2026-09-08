@@ -1,7 +1,11 @@
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.core.exceptions import PermissionDenied
+from django.db import models
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views import View
+from django.views.generic import DetailView, ListView, TemplateView
 
 from apps.core.mixins import RoleRequiredMixin
 
@@ -38,6 +42,87 @@ def property_management_required(view_function):
             return view_function(request, *args, **kwargs)
 
     return ProtectedFunctionView.as_view()
+
+
+class TenantSelfServiceMixin(RoleRequiredMixin):
+    allowed_roles = (User.Role.TENANT,)
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
+        try:
+            self.tenant_profile = request.user.tenant_profile
+        except User.tenant_profile.RelatedObjectDoesNotExist as exc:
+            raise PermissionDenied('No tenant profile is linked to this account.') from exc
+        return super().dispatch(request, *args, **kwargs)
+
+
+class OwnerSelfServiceMixin(RoleRequiredMixin):
+    allowed_roles = (User.Role.OWNER,)
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
+        try:
+            self.owner_profile = request.user.owner_profile
+        except User.owner_profile.RelatedObjectDoesNotExist as exc:
+            raise PermissionDenied('No owner profile is linked to this account.') from exc
+        return super().dispatch(request, *args, **kwargs)
+
+
+class TenantProfileView(TenantSelfServiceMixin, TemplateView):
+    template_name = 'properties/tenant_self_profile.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tenant'] = self.tenant_profile
+        return context
+
+
+class TenantContractListView(TenantSelfServiceMixin, ListView):
+    template_name = 'properties/tenant_self_contracts.html'
+    context_object_name = 'contracts'
+
+    def get_queryset(self):
+        return self.tenant_profile.contracts.select_related(
+            'unit', 'unit__property'
+        ).order_by('-start_date', '-pk')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        today = timezone.localdate()
+        context['current_contract'] = self.get_queryset().filter(
+            status=RentalContract.Status.ACTIVE,
+            start_date__lte=today,
+            end_date__gte=today,
+        ).first()
+        return context
+
+
+class OwnerPropertyListView(OwnerSelfServiceMixin, ListView):
+    template_name = 'properties/owner_self_property_list.html'
+    context_object_name = 'properties'
+
+    def get_queryset(self):
+        return self.owner_profile.properties.annotate(
+            unit_count=models.Count('units')
+        ).order_by('name')
+
+
+class OwnerPropertyDetailView(OwnerSelfServiceMixin, DetailView):
+    template_name = 'properties/owner_self_property_detail.html'
+    context_object_name = 'property'
+
+    def get_queryset(self):
+        return self.owner_profile.properties.all()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['units'] = self.object.units.order_by('unit_number')
+        context['contracts'] = RentalContract.objects.filter(
+            unit__property=self.object
+        ).select_related('tenant', 'unit').order_by('-start_date')
+        return context
 
 
 # =========================

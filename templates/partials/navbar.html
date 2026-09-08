@@ -1,26 +1,25 @@
 <nav class="navbar" aria-label="Primary navigation">
-    <a class="navbar-brand" href="{% url 'finance:dashboard' %}">
+    <a class="navbar-brand" href="{% if user.role == 'tenant' and not user.is_superuser %}{% url 'accounts:home' %}{% else %}{% url 'finance:dashboard' %}{% endif %}">
         <span class="brand-mark" aria-hidden="true">KR</span>
         <span><strong>Keystone RMS</strong><small>Real Estate Management</small></span>
     </a>
     <ul class="navbar-links" role="list">
-        <li><a href="{% url 'properties:property_list' %}" class="{% if 'properties' in request.resolver_match.app_names or 'property' in request.path %}active{% endif %}">Properties</a></li>
-        <li><a href="{% url 'billing:invoice_list' %}" class="{% if 'billing' in request.resolver_match.app_names or 'invoice' in request.path %}active{% endif %}">Invoices</a></li>
-        <li><a href="{% url 'operations:deposit_list' %}" class="{% if 'deposit' in request.path %}active{% endif %}">Deposits</a></li>
-        <li><a href="{% url 'operations:maintenance_list' %}" class="{% if 'maintenance' in request.path %}active{% endif %}">Maintenance</a></li>
-        <li><a href="{% url 'operations:expense_list' %}" class="{% if 'expense' in request.path %}active{% endif %}">Expenses</a></li>
-        <li><a href="{% url 'finance:dashboard' %}" class="{% if 'finance' in request.resolver_match.app_names or 'dashboard' in request.path %}active{% endif %}">Dashboard</a></li>
         {% if user.is_authenticated %}
-            <li class="user-summary">
-                <span class="user-avatar" aria-hidden="true">{{ user.username|first|upper }}</span>
-                <span><strong>{{ user.username }}</strong><small>{% if user.is_superuser %}Administrator{% elif user.get_role_display %}{{ user.get_role_display }}{% else %}User{% endif %}</small></span>
-            </li>
-            <li>
-                <form class="logout-form" method="post" action="{% url 'accounts:logout' %}">
-                    {% csrf_token %}
-                    <button class="button button-quiet button-on-dark btn-logout" type="submit">Log out</button>
-                </form>
-            </li>
+            {% if user.role == 'tenant' and not user.is_superuser %}
+                <li><a href="{% url 'accounts:home' %}">Home</a></li>
+                <li><a href="{% url 'billing:invoice_list' %}">My Invoices</a></li>
+                <li><a href="{% url 'finance:report_tenant_statement' %}">My Statement</a></li>
+            {% elif user.role == 'owner' and not user.is_superuser %}
+                <li><a href="{% url 'finance:dashboard' %}">Dashboard</a></li>
+                <li><a href="{% url 'properties:owner_self_property_list' %}">My Properties</a></li>
+                <li><a href="{% url 'finance:reports' %}">Reports</a></li>
+            {% else %}
+                {% if user.is_superuser or user.role == 'admin' or user.role == 'property_manager' %}<li><a href="{% url 'properties:property_list' %}">Properties</a></li>{% endif %}
+                {% if user.is_superuser or user.role == 'admin' or user.role == 'accountant' %}<li><a href="{% url 'billing:invoice_list' %}">Invoices</a></li>{% endif %}
+                <li><a href="{% url 'finance:dashboard' %}">Dashboard</a></li>
+            {% endif %}
+            <li class="user-summary"><span class="user-avatar" aria-hidden="true">{{ user.username|first|upper }}</span><span><strong>{{ user.username }}</strong><small>{% if user.is_superuser %}Administrator{% else %}{{ user.get_role_display }}{% endif %}</small></span></li>
+            <li><form class="logout-form" method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="button button-quiet button-on-dark btn-logout" type="submit">Log out</button></form></li>
         {% else %}
             <li><a href="{% url 'accounts:login' %}" class="btn btn-primary navbar-login">Login</a></li>
         {% endif %}

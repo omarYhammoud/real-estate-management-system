@@ -7,6 +7,12 @@ app_name = "properties"
 
 
 urlpatterns = [
+    # Read-only Owner/Tenant self-service
+    path("portal/tenant/profile/", views.TenantProfileView.as_view(), name="tenant_self_profile"),
+    path("portal/tenant/contracts/", views.TenantContractListView.as_view(), name="tenant_self_contracts"),
+    path("portal/owner/properties/", views.OwnerPropertyListView.as_view(), name="owner_self_property_list"),
+    path("portal/owner/properties/<int:pk>/", views.OwnerPropertyDetailView.as_view(), name="owner_self_property_detail"),
+
     # Owners
     path(
         "owners/",

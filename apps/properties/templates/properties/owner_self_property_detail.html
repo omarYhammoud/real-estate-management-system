@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}{{ property.name }} | My Properties{% endblock %}
+{% block content %}
+<div class="crumb"><a href="{% url 'properties:owner_self_property_list' %}">My Properties</a> / <b>{{ property.name }}</b></div>
+<div class="page-header"><div><p class="eyebrow">Owner portfolio</p><h1>{{ property.name }}</h1><p>{{ property.address }}</p></div><span class="badge">{{ property.get_status_display }}</span></div>
+<section class="panel"><div class="stat-line"><span class="k">Type</span><span class="v">{{ property.get_property_type_display }}</span></div><div class="stat-line"><span class="k">Description</span><span class="v">{{ property.description|default:'—' }}</span></div></section>
+<section class="panel table-card"><p class="eyebrow">Units</p><div class="table-wrap"><table><thead><tr><th>Unit</th><th>Type</th><th>Rent</th><th>Status</th></tr></thead><tbody>{% for unit in units %}<tr><td>{{ unit.unit_number }}</td><td>{{ unit.unit_type|default:'—' }}</td><td>{{ unit.rent_amount }}</td><td>{{ unit.get_status_display }}</td></tr>{% empty %}<tr><td colspan="4">No units.</td></tr>{% endfor %}</tbody></table></div></section>
+<section class="panel table-card"><p class="eyebrow">Rental contracts</p><div class="table-wrap"><table><thead><tr><th>Reference</th><th>Tenant</th><th>Unit</th><th>Period</th><th>Status</th></tr></thead><tbody>{% for contract in contracts %}<tr><td>{{ contract.contract_reference }}</td><td>{{ contract.tenant.full_name }}</td><td>{{ contract.unit.unit_number }}</td><td>{{ contract.start_date }} – {{ contract.end_date }}</td><td>{{ contract.get_status_display }}</td></tr>{% empty %}<tr><td colspan="5">No contracts.</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}

@@ -1082,6 +1082,21 @@ class FinanceOwnershipScopeTests(TestCase):
         self.assertFalse(response.context['filter_form'].is_valid())
         self.assertEqual([row['property'] for row in response.context['property_rows']], [self.property])
 
+    def test_owner_property_performance_counts_unit_only_expense(self):
+        Expense.objects.create(
+            property=None,
+            unit=self.unit,
+            expense_reference='OWN-UNIT-ONLY-EXPENSE',
+            category=Expense.Category.REPAIRS,
+            amount=Decimal('50.00'),
+            expense_date=date(2026, 1, 7),
+        )
+        self.client.force_login(self.owner_user)
+        response = self.client.get(reverse('finance:report_property_performance'))
+        row = response.context['property_rows'][0]
+        self.assertEqual(row['expenses'], Decimal('150.00'))
+        self.assertEqual(response.context['total_expenses'], Decimal('150.00'))
+
     def test_tenant_statement_forces_linked_tenant(self):
         self.client.force_login(self.tenant_user)
         response = self.client.get(reverse('finance:report_tenant_statement'), {'tenant': self.other_tenant.pk})

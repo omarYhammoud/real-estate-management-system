@@ -479,13 +479,18 @@ class PropertyPerformanceView(DateFilteredReportMixin, TemplateView):
         property_ids = list(properties.values_list('pk', flat=True))
         payments = self.filter_by_date(Payment.objects.filter(invoice__contract__unit__property_id__in=property_ids), 'payment_date')
         expenses = self.filter_by_date(
-            Expense.objects.filter(property_id__in=property_ids).exclude(
+            Expense.objects.filter(
+                Q(property_id__in=property_ids)
+                | Q(property__isnull=True, unit__property_id__in=property_ids)
+            ).exclude(
                 status=Expense.ExpenseStatus.CANCELLED
+            ).annotate(
+                performance_property_id=Coalesce('property_id', 'unit__property_id')
             ),
             'expense_date',
         )
         revenue_map = dict(payments.values('invoice__contract__unit__property_id').annotate(total=Sum('amount')).values_list('invoice__contract__unit__property_id', 'total'))
-        expense_map = dict(expenses.values('property_id').annotate(total=Sum('amount')).values_list('property_id', 'total'))
+        expense_map = dict(expenses.values('performance_property_id').annotate(total=Sum('amount')).values_list('performance_property_id', 'total'))
         rows = []
         for property_object in properties:
             revenue = revenue_map.get(property_object.pk, ZERO)
