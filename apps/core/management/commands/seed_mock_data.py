@@ -11,7 +11,6 @@ from django.utils import timezone
 from apps.properties.models import Owner, Property, Unit, Tenant, RentalContract
 from apps.billing.models import RentSchedule, Invoice, InvoiceLineItem, Payment, Receipt
 from apps.operations.models import SecurityDeposit, MaintenanceRequest, Expense
-from apps.finance.models import FinancialTransaction
 
 
 class Command(BaseCommand):
@@ -61,7 +60,6 @@ class Command(BaseCommand):
                     deposit = self.add(SecurityDeposit, {'contract': contract},
                         required_amount=rent, received_amount=rent, received_date=start,
                         remaining_balance=rent, status='held')
-                    self.ledger(f'DEMO-DEP-{p}{u}', 'deposit', rent, start, 'security_deposit', deposit.pk)
                     for period in range(3):
                         due = today - timedelta(days=65 - period * 30)
                         schedule = self.add(RentSchedule, {'contract': contract,
@@ -82,7 +80,6 @@ class Command(BaseCommand):
                                 amount=paid, payment_method='bank_transfer')
                             self.add(Receipt, {'receipt_reference': f'DEMO-RCT-{p}{u}-{period}'},
                                 payment=payment, receipt_date=due, amount=paid)
-                            self.ledger(payment.payment_reference, 'rent_income', paid, due, 'payment', payment.pk)
                     self.add(MaintenanceRequest, {'property': prop, 'unit': unit,
                         'issue': '[DEMO] ' + ('Leaking kitchen tap', 'Air conditioner service', 'Replace hallway light')[u-1]},
                         tenant=tenant, priority=('high', 'medium', 'low')[u-1],
@@ -92,7 +89,6 @@ class Command(BaseCommand):
                 expense = self.add(Expense, {'expense_reference': f'DEMO-EXP-{p}'},
                     property=prop, category='cleaning', amount=Decimal('150.00'),
                     expense_date=today - timedelta(days=7), description='Demo common-area cleaning', status='paid')
-                self.ledger(f'DEMO-EXP-{p}', 'expense', expense.amount, expense.expense_date, 'expense', expense.pk)
             if options['dry_run']:
                 transaction.set_rollback(True)
         prefix = 'Dry run: would create' if options['dry_run'] else 'Created'
@@ -106,13 +102,7 @@ class Command(BaseCommand):
         if obj is not None:
             return obj
         obj = model(**lookup, **defaults)
-        # This nullable ledger field is required by forms, but no demo login is needed.
-        obj.full_clean(exclude=['recorded_by'] if model is FinancialTransaction else None)
+        obj.full_clean()
         obj.save()
         self.created[model.__name__] += 1
         return obj
-
-    def ledger(self, reference, kind, amount, date, entity, entity_id):
-        return self.add(FinancialTransaction, {'transaction_reference': reference},
-            transaction_type=kind, amount=amount, transaction_date=date,
-            related_entity_type=entity, related_entity_id=entity_id)
