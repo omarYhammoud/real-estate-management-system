@@ -1,5 +1,9 @@
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views import View
+
+from apps.core.mixins import RoleRequiredMixin
 
 from .forms import (
     OwnerForm,
@@ -17,10 +21,30 @@ from .models import (
 )
 
 
+User = get_user_model()
+
+
+class PropertyManagementRequiredMixin(RoleRequiredMixin):
+    allowed_roles = (User.Role.ADMIN, User.Role.PROPERTY_MANAGER)
+
+
+def property_management_required(view_function):
+    """Run an existing function view through the shared role mixin."""
+    class ProtectedFunctionView(PropertyManagementRequiredMixin, View):
+        def get(self, request, *args, **kwargs):
+            return view_function(request, *args, **kwargs)
+
+        def post(self, request, *args, **kwargs):
+            return view_function(request, *args, **kwargs)
+
+    return ProtectedFunctionView.as_view()
+
+
 # =========================
 # OWNER VIEWS
 # =========================
 
+@property_management_required
 def owner_list(request):
     owners = Owner.objects.all()
 
@@ -31,6 +55,7 @@ def owner_list(request):
     )
 
 
+@property_management_required
 def owner_create(request):
     if request.method == "POST":
         form = OwnerForm(request.POST)
@@ -52,6 +77,7 @@ def owner_create(request):
     )
 
 
+@property_management_required
 def owner_update(request, pk):
     owner = get_object_or_404(Owner, pk=pk)
 
@@ -75,6 +101,7 @@ def owner_update(request, pk):
     )
 
 
+@property_management_required
 def owner_delete(request, pk):
     owner = get_object_or_404(Owner, pk=pk)
 
@@ -97,6 +124,7 @@ def owner_delete(request, pk):
 # PROPERTY VIEWS
 # =========================
 
+@property_management_required
 def property_list(request):
     properties = Property.objects.select_related("owner").all()
 
@@ -107,6 +135,7 @@ def property_list(request):
     )
 
 
+@property_management_required
 def property_create(request):
     if request.method == "POST":
         form = PropertyForm(request.POST)
@@ -128,6 +157,7 @@ def property_create(request):
     )
 
 
+@property_management_required
 def property_update(request, pk):
     property_obj = get_object_or_404(Property, pk=pk)
 
@@ -151,6 +181,7 @@ def property_update(request, pk):
     )
 
 
+@property_management_required
 def property_delete(request, pk):
     property_obj = get_object_or_404(Property, pk=pk)
 
@@ -173,6 +204,7 @@ def property_delete(request, pk):
 # UNIT VIEWS
 # =========================
 
+@property_management_required
 def unit_list(request):
     units = Unit.objects.select_related("property").all()
 
@@ -183,6 +215,7 @@ def unit_list(request):
     )
 
 
+@property_management_required
 def unit_create(request):
     if request.method == "POST":
         form = UnitForm(request.POST)
@@ -204,6 +237,7 @@ def unit_create(request):
     )
 
 
+@property_management_required
 def unit_update(request, pk):
     unit = get_object_or_404(Unit, pk=pk)
 
@@ -227,6 +261,7 @@ def unit_update(request, pk):
     )
 
 
+@property_management_required
 def unit_delete(request, pk):
     unit = get_object_or_404(Unit, pk=pk)
 
@@ -249,23 +284,7 @@ def unit_delete(request, pk):
 # TENANT VIEWS
 # =========================
 
-def tenant_detail(request, pk):
-    tenant = get_object_or_404(Tenant, pk=pk)
-
-    contracts = tenant.contracts.select_related(
-        "unit",
-        "unit__property",
-    ).all()
-
-    return render(
-        request,
-        "properties/tenant_detail.html",
-        {
-            "tenant": tenant,
-            "contracts": contracts,
-        },
-    )
-
+@property_management_required
 def tenant_list(request):
     tenants = Tenant.objects.all()
 
@@ -275,6 +294,7 @@ def tenant_list(request):
         {"tenants": tenants},
     )
 
+@property_management_required
 def tenant_detail(request, pk):
     tenant = get_object_or_404(Tenant, pk=pk)
 
@@ -293,6 +313,7 @@ def tenant_detail(request, pk):
     )
 
 
+@property_management_required
 def tenant_create(request):
     if request.method == "POST":
         form = TenantForm(request.POST)
@@ -314,6 +335,7 @@ def tenant_create(request):
     )
 
 
+@property_management_required
 def tenant_update(request, pk):
     tenant = get_object_or_404(Tenant, pk=pk)
 
@@ -337,6 +359,7 @@ def tenant_update(request, pk):
     )
 
 
+@property_management_required
 def tenant_delete(request, pk):
     tenant = get_object_or_404(Tenant, pk=pk)
 
@@ -359,6 +382,7 @@ def tenant_delete(request, pk):
 # RENTAL CONTRACT VIEWS
 # =========================
 
+@property_management_required
 def contract_list(request):
     contracts = RentalContract.objects.select_related(
         "tenant",
@@ -373,6 +397,7 @@ def contract_list(request):
     )
 
 
+@property_management_required
 def contract_detail(request, pk):
     contract = get_object_or_404(
         RentalContract.objects.select_related(
@@ -390,6 +415,7 @@ def contract_detail(request, pk):
     )
 
 
+@property_management_required
 def contract_create(request):
     if request.method == "POST":
         form = RentalContractForm(request.POST)
@@ -419,6 +445,7 @@ def contract_create(request):
     )
 
 
+@property_management_required
 def contract_update(request, pk):
     contract = get_object_or_404(RentalContract, pk=pk)
 
@@ -453,6 +480,7 @@ def contract_update(request, pk):
     )
 
 
+@property_management_required
 def contract_delete(request, pk):
     contract = get_object_or_404(RentalContract, pk=pk)
 
