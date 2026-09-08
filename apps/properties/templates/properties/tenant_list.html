@@ -1,133 +1,210 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
 {% block title %}
-Tenants — Keystone RMS
-{% endblock %}
-
-{% block breadcrumb %}
-Portfolio / <b>Tenants</b>
-{% endblock %}
-
-{% block page_title %}
-Tenants
+Tenants | Keystone RMS
 {% endblock %}
 
 {% block content %}
 
-<div class="section-head">
+<div class="crumb">
+    Portfolio / <b>Tenants</b>
+</div>
+
+<header class="page-header">
+
     <div>
-        <h2>Tenants</h2>
-        <p>Manage tenant profiles and review their rental history.</p>
+
+        <p class="eyebrow">
+            Tenant management
+        </p>
+
+        <h1>
+            Tenants
+        </h1>
+
+        <p>
+            Manage tenant profiles and review their rental history.
+        </p>
+
     </div>
 
     <div class="actions">
+
         <a
             href="{% url 'properties:tenant_create' %}"
-            class="btn primary"
+            class="btn btn-primary"
         >
             + Add Tenant
         </a>
+
     </div>
-</div>
 
-<div class="table-wrap">
+</header>
 
-    <table>
 
-        <thead>
-            <tr>
-                <th>Full Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Identification Number</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
+<section class="content-card">
 
-        <tbody>
+    <div class="content-card-header">
 
-            {% for tenant in tenants %}
+        <div>
 
-            <tr>
+            <h2>
+                Tenant directory
+            </h2>
 
-                <td>
-                    <strong>
-                        {{ tenant.full_name }}
-                    </strong>
-                </td>
+            <p>
+                Contact information, identification, and account status.
+            </p>
 
-                <td>
-                    {{ tenant.email }}
-                </td>
+        </div>
 
-                <td>
-                    {{ tenant.phone }}
-                </td>
+        {% if tenants %}
 
-                <td>
-                    {{ tenant.identification_number }}
-                </td>
+            <span class="record-count">
+                {{ tenants|length }}
+                record{{ tenants|length|pluralize }}
+            </span>
 
-                <td>
+        {% endif %}
 
-                    {% if tenant.status == "active" %}
+    </div>
 
-                        <span class="badge ok">
-                            Active
-                        </span>
 
-                    {% else %}
+    <div class="table-scroll">
 
-                        <span class="badge neutral">
-                            {{ tenant.status }}
-                        </span>
+        <table class="table">
 
-                    {% endif %}
+            <thead>
 
-                </td>
+                <tr>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Identification Number</th>
+                    <th>Status</th>
+                    <th class="text-right">Actions</th>
+                </tr>
 
-                <td>
+            </thead>
 
-                    <a
-                        href="{% url 'properties:tenant_detail' tenant.pk %}"
-                        class="btn small"
-                    >
-                        View
-                    </a>
 
-                    <a
-                        href="{% url 'properties:tenant_update' tenant.pk %}"
-                        class="btn small"
-                    >
-                        Edit
-                    </a>
+            <tbody>
 
-                    <a
-                        href="{% url 'properties:tenant_delete' tenant.pk %}"
-                        class="btn small"
-                    >
-                        Delete
-                    </a>
+                {% for tenant in tenants %}
 
-                </td>
+                    <tr>
 
-            </tr>
+                        <td data-label="Full Name">
+                            <strong>
+                                {{ tenant.full_name }}
+                            </strong>
+                        </td>
 
-            {% empty %}
+                        <td data-label="Email">
+                            {{ tenant.email|default:"—" }}
+                        </td>
 
-            <tr>
-                <td colspan="6">
-                    No tenants found.
-                </td>
-            </tr>
+                        <td data-label="Phone">
+                            {{ tenant.phone|default:"—" }}
+                        </td>
 
-            {% endfor %}
+                        <td data-label="Identification Number">
+                            {{ tenant.identification_number|default:"—" }}
+                        </td>
 
-        </tbody>
+                        <td data-label="Status">
 
-    </table>
+                            {% if tenant.status == 'active' %}
 
-</div>
+                                <span class="badge badge-success">
+                                    Active
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge badge-neutral">
+                                    {{ tenant.get_status_display|default:tenant.status }}
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td
+                            data-label="Actions"
+                            class="text-right"
+                        >
+
+                            <div class="actions table-actions">
+
+                                <a
+                                    href="{% url 'properties:tenant_detail' tenant.pk %}"
+                                    class="btn btn-secondary btn-small"
+                                >
+                                    View
+                                </a>
+
+                                <a
+                                    href="{% url 'properties:tenant_update' tenant.pk %}"
+                                    class="btn btn-secondary btn-small"
+                                >
+                                    Edit
+                                </a>
+
+                                <a
+                                    href="{% url 'properties:tenant_delete' tenant.pk %}"
+                                    class="btn btn-outline btn-small"
+                                >
+                                    Delete
+                                </a>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+
+                        <td colspan="6">
+
+                            <div class="empty-state">
+
+                                <div class="t">
+                                    No tenants found
+                                </div>
+
+                                <p class="sub">
+                                    Add the first tenant to begin managing rental records.
+                                </p>
+
+                                <div class="empty-actions">
+
+                                    <a
+                                        href="{% url 'properties:tenant_create' %}"
+                                        class="btn btn-primary btn-small"
+                                    >
+                                        + Add Tenant
+                                    </a>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
 
 {% endblock %}

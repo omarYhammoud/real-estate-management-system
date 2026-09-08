@@ -1,46 +1,127 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
 {% block title %}
-{{ title }} — Keystone RMS
-{% endblock %}
-
-{% block breadcrumb %}
-Portfolio / <b>{{ title }}</b>
-{% endblock %}
-
-{% block page_title %}
-{{ title }}
+{{ title }} | Keystone RMS
 {% endblock %}
 
 {% block content %}
 
-<div class="section-head">
-    <div>
-        <h2>{{ title }}</h2>
-        <p>Complete the form below and save your changes.</p>
-    </div>
+<div class="crumb">
+    Portfolio / <b>{{ title }}</b>
 </div>
 
-<div class="panel">
+<header class="page-header">
 
-    <form method="POST">
+    <div>
+
+        <p class="eyebrow">
+            Property & Rental Management
+        </p>
+
+        <h1>
+            {{ title }}
+        </h1>
+
+        <p>
+            Complete the information below and save your changes.
+        </p>
+
+    </div>
+
+</header>
+
+
+<section class="content-card property-form-card">
+    
+    <div class="content-card-header">
+
+        <div>
+
+            <h2>
+                {{ title }}
+            </h2>
+
+            <p>
+                Fields marked as required must be completed before saving.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <form
+        method="POST"
+        class="form-stack"
+        novalidate
+    >
 
         {% csrf_token %}
 
-        {{ form.as_p }}
 
-        <div style="margin-top: 18px; display: flex; gap: 10px;">
+        {% if form.non_field_errors %}
+
+            <div class="alert alert-danger">
+
+                {{ form.non_field_errors }}
+
+            </div>
+
+        {% endif %}
+
+
+        {% for field in form %}
+
+            <div class="form-field">
+
+                <label for="{{ field.id_for_label }}">
+
+                    {{ field.label }}
+
+                    {% if field.field.required %}
+                        <span aria-hidden="true">*</span>
+                    {% endif %}
+
+                </label>
+
+
+                {{ field }}
+
+
+                {% if field.help_text %}
+
+                    <div class="help-text">
+                        {{ field.help_text }}
+                    </div>
+
+                {% endif %}
+
+
+                {% for error in field.errors %}
+
+                    <div class="field-error">
+                        {{ error }}
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endfor %}
+
+
+        <div class="actions">
 
             <button
                 type="submit"
-                class="btn primary"
+                class="btn btn-primary"
             >
                 Save
             </button>
 
             <a
                 href="javascript:history.back()"
-                class="btn"
+                class="btn btn-secondary"
             >
                 Cancel
             </a>
@@ -49,6 +130,6 @@ Portfolio / <b>{{ title }}</b>
 
     </form>
 
-</div>
+</section>
 
 {% endblock %}

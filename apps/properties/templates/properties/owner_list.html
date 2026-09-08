@@ -1,121 +1,228 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
 {% block title %}
-Owners — Keystone RMS
-{% endblock %}
-
-{% block breadcrumb %}
-Portfolio / <b>Owners</b>
-{% endblock %}
-
-{% block page_title %}
-Owners
+Owners | Keystone RMS
 {% endblock %}
 
 {% block content %}
 
-<div class="section-head">
+<div class="crumb">
+    Portfolio / <b>Owners</b>
+</div>
+
+<header class="page-header">
+
     <div>
-        <h2>Property Owners</h2>
-        <p>Manage owners and the properties registered under them.</p>
+
+        <p class="eyebrow">
+            Property ownership
+        </p>
+
+        <h1>
+            Owners
+        </h1>
+
+        <p>
+            Manage property owners, contact information, and account status.
+        </p>
+
     </div>
 
     <div class="actions">
+
         <a
             href="{% url 'properties:owner_create' %}"
-            class="btn primary"
+            class="btn btn-primary"
         >
             + Add Owner
         </a>
+
     </div>
-</div>
 
-<div class="table-wrap">
+</header>
 
-    <table>
 
-        <thead>
-            <tr>
-                <th>Full Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
+<section class="content-card">
 
-        <tbody>
+    <div class="content-card-header">
 
-            {% for owner in owners %}
+        <div>
 
-            <tr>
+            <h2>
+                Owner directory
+            </h2>
 
-                <td>
-                    <strong>
-                        {{ owner.full_name }}
-                    </strong>
-                </td>
+            <p>
+                Registered property owners and their contact details.
+            </p>
 
-                <td>
-                    {{ owner.email }}
-                </td>
+        </div>
 
-                <td>
-                    {{ owner.phone }}
-                </td>
 
-                <td>
+        {% if owners %}
 
-                    {% if owner.status == "active" %}
+            <span class="record-count">
 
-                        <span class="badge ok">
-                            Active
-                        </span>
+                {{ owners|length }}
+                record{{ owners|length|pluralize }}
 
-                    {% else %}
+            </span>
 
-                        <span class="badge neutral">
-                            {{ owner.status }}
-                        </span>
+        {% endif %}
 
-                    {% endif %}
+    </div>
 
-                </td>
 
-                <td>
+    <div class="table-scroll">
 
-                    <a
-                        href="{% url 'properties:owner_update' owner.pk %}"
-                        class="btn small"
-                    >
-                        Edit
-                    </a>
+        <table class="table">
 
-                    <a
-                        href="{% url 'properties:owner_delete' owner.pk %}"
-                        class="btn small"
-                    >
-                        Delete
-                    </a>
+            <thead>
 
-                </td>
+                <tr>
 
-            </tr>
+                    <th>
+                        Full Name
+                    </th>
 
-            {% empty %}
+                    <th>
+                        Email
+                    </th>
 
-            <tr>
-                <td colspan="5">
-                    No owners found.
-                </td>
-            </tr>
+                    <th>
+                        Phone
+                    </th>
 
-            {% endfor %}
+                    <th>
+                        Status
+                    </th>
 
-        </tbody>
+                    <th class="text-right">
+                        Actions
+                    </th>
 
-    </table>
+                </tr>
 
-</div>
+            </thead>
+
+
+            <tbody>
+
+                {% for owner in owners %}
+
+                    <tr>
+
+                        <td data-label="Full Name">
+
+                            <strong>
+                                {{ owner.full_name }}
+                            </strong>
+
+                        </td>
+
+
+                        <td data-label="Email">
+
+                            {{ owner.email|default:"—" }}
+
+                        </td>
+
+
+                        <td data-label="Phone">
+
+                            {{ owner.phone|default:"—" }}
+
+                        </td>
+
+
+                        <td data-label="Status">
+
+                            {% if owner.status == 'active' %}
+
+                                <span class="badge badge-success">
+                                    Active
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge badge-neutral">
+                                    {{ owner.get_status_display|default:owner.status }}
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <td
+                            data-label="Actions"
+                            class="text-right"
+                        >
+
+                            <div class="actions table-actions">
+
+                                <a
+                                    href="{% url 'properties:owner_update' owner.pk %}"
+                                    class="btn btn-secondary btn-small"
+                                >
+                                    Edit
+                                </a>
+
+                                <a
+                                    href="{% url 'properties:owner_delete' owner.pk %}"
+                                    class="btn btn-outline btn-small"
+                                >
+                                    Delete
+                                </a>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+
+                {% empty %}
+
+                    <tr>
+
+                        <td colspan="5">
+
+                            <div class="empty-state">
+
+                                <div class="t">
+                                    No owners found
+                                </div>
+
+                                <p class="sub">
+                                    Add the first property owner to begin building the portfolio.
+                                </p>
+
+                                <div class="empty-actions">
+
+                                    <a
+                                        href="{% url 'properties:owner_create' %}"
+                                        class="btn btn-primary btn-small"
+                                    >
+                                        + Add Owner
+                                    </a>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
 
 {% endblock %}
